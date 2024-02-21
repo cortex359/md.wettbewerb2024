@@ -4,6 +4,7 @@ from utils import input
 import math
 import numpy as np
 import itertools
+import time
 
 
 def calc_overlap(df, node_a, node_b):
@@ -59,13 +60,13 @@ def calc_distance_max(df):
 
 
 def calc_score(input_nodes, output_nodes, edges):
+    n = input_nodes.shape[0]
+    k = len(edges)
     overlap = calc_overlap_fast(output_nodes) * 100
     distance = calc_distance_max(output_nodes) * 100
     angle = calc_angle_max(input_nodes, output_nodes) * 100
-    n = input_nodes.shape[0]
-    k = len(edges)
-    print(f"n={n}, k={k}\nOverlap: {overlap}\nDistance: {distance}\nAngle: {angle}")
-    return 1000 * (n + k) / (1 + 2 * overlap + distance + 0.1 * angle)
+    total_score = 1000 * (n + k) / (1 + 2 * overlap + distance + 0.1 * angle)
+    return n, k, overlap, distance, angle, total_score
 
 
 test_cases = ["Area_Afro-Eurasia", "Area_Americas", "Area_Asia", "Area_Europe", "CO2_Production_Afro-Eurasia",
@@ -73,10 +74,21 @@ test_cases = ["Area_Afro-Eurasia", "Area_Americas", "Area_Asia", "Area_Europe", 
               "Population_Afro-Eurasia", "Population_Americas", "Population_Density_Afro-Eurasia",
               "Population_Density_Americas"]
 
+time_global_start = time.perf_counter_ns()
+
 for test_case in test_cases:
     nodes_input, edges = input.read_to_df(f"input_files/{test_case}.txt")
     edges = list(zip(edges.node_0.to_list(), edges.node_1.to_list()))
     nodes_output = score.read_to_df(f"result_files/{test_case}.txt.out")
     nodes_output.set_index("node", inplace=True)
-    print(f"\n{test_case}")
-    print(f"Score: {calc_score(nodes_input, nodes_output, edges)}")
+
+    time_start = time.perf_counter_ns()
+    n, k, overlap, distance, angle, total_score = calc_score(nodes_input, nodes_output, edges)
+    time_stop = time.perf_counter_ns()
+    print(f"{test_case}")
+    print(f"Time: {(time_stop - time_start) / 1000} µs")
+    print(
+        f"Score: {total_score:.2f} (n={n}, k={k}, overlap={overlap:.2f}, distance={distance:.2f}, angle={angle:.2f})\n")
+
+time_global_stop = time.perf_counter_ns()
+print(f"Total Time: {(time_global_stop - time_global_start) / 1e6} ms")
