@@ -1,0 +1,17 @@
+#!/usr/bin/env zsh
+
+typeset -A scores=()
+
+for f in *_score_*.txt(on) ; do {
+    test_case=${${(s._score_.)f}[1]}
+    test_score=${${${(s._score_.)f}[2]}%.txt}
+    scores+=( [${test_case}]=${test_score} )
+}; done
+
+summe=0.0
+for s in $scores; do {
+    summe=$(( summe + s ))
+}; done
+
+env LC_ALL=C printf '%-36s %7.2f\n' ${(Akv)scores}
+env LC_ALL=C printf '%35s %7.2f\n' "Summe:" ${summe}
