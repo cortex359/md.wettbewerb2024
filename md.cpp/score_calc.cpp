@@ -10,6 +10,8 @@
 #include <iterator>
 #include <random>
 
+const auto VERSION = "1.0.0";
+
 struct Node {
     std::string id;
     double value;
@@ -39,7 +41,7 @@ struct Score {
     double total_score;
 };
 
-std::map<std::string, Node> read_input_nodes(const std::string &file_path) {
+std::map<std::string, Node> read_input_nodes(const std::string& file_path) {
     std::map<std::string, Node> nodes;
     std::ifstream file(file_path);
     std::string line, id;
@@ -59,7 +61,7 @@ std::map<std::string, Node> read_input_nodes(const std::string &file_path) {
     return nodes;
 }
 
-std::vector<Edge> read_edges(const std::string &file_path) {
+std::vector<Edge> read_edges(const std::string& file_path) {
     std::vector<Edge> edges;
     std::ifstream file(file_path);
     std::string line, node_0, node_1;
@@ -82,7 +84,7 @@ std::vector<Edge> read_edges(const std::string &file_path) {
     return edges;
 }
 
-std::map<std::string, OutputNode> read_output_nodes(const std::string &file_path) {
+std::map<std::string, OutputNode> read_output_nodes(const std::string& file_path) {
     std::map<std::string, OutputNode> nodes;
     std::ifstream file(file_path);
     std::string line, id;
@@ -103,7 +105,7 @@ std::map<std::string, OutputNode> read_output_nodes(const std::string &file_path
     return nodes;
 }
 
-double calc_overlap(const OutputNode &node_a, const OutputNode &node_b) {
+double calc_overlap(const OutputNode& node_a, const OutputNode& node_b) {
     if (node_a.node == node_b.node) {
         return 0.0;
     }
@@ -112,7 +114,7 @@ double calc_overlap(const OutputNode &node_a, const OutputNode &node_b) {
     return dist >= R ? 0.0 : (R - dist) / R;
 }
 
-double calc_distance(const OutputNode &node_a, const OutputNode &node_b) {
+double calc_distance(const OutputNode& node_a, const OutputNode& node_b) {
     if (node_a.node == node_b.node) {
         return 0.0;
     }
@@ -121,7 +123,7 @@ double calc_distance(const OutputNode &node_a, const OutputNode &node_b) {
     return dist < R ? 0.0 : (dist - R) / R;
 }
 
-double calc_angle(const Node &node_a, const Node &node_b) {
+double calc_angle(const Node& node_a, const Node& node_b) {
     if (node_a.id == node_b.id) {
         return 0.0;
     }
@@ -131,7 +133,7 @@ double calc_angle(const Node &node_a, const Node &node_b) {
     return std::atan2(delta_y, delta_x) / M_PI;
 }
 
-double calc_angle(const OutputNode &node_a, const OutputNode &node_b) {
+double calc_angle(const OutputNode& node_a, const OutputNode& node_b) {
     if (node_a.node == node_b.node) {
         return 0.0;
     }
@@ -141,11 +143,11 @@ double calc_angle(const OutputNode &node_a, const OutputNode &node_b) {
     return std::atan2(delta_y, delta_x) / M_PI;
 }
 
-double calc_angle_max(const std::map<std::string, Node> &input_nodes,
-                      const std::map<std::string, OutputNode> &output_nodes,
-                      const std::vector<Edge> &edges) {
+double calc_angle_max(const std::map<std::string, Node>& input_nodes,
+                      const std::map<std::string, OutputNode>& output_nodes,
+                      const std::vector<Edge>& edges) {
     double angle_max = 0.0;
-    for (const auto &[node_0, node_1]: edges) {
+    for (const auto& [node_0, node_1] : edges) {
         const auto& input_a = input_nodes.at(node_0);
         const auto& input_b = input_nodes.at(node_1);
         const auto& output_a = output_nodes.at(node_0);
@@ -156,7 +158,7 @@ double calc_angle_max(const std::map<std::string, Node> &input_nodes,
     return angle_max;
 }
 
-double calc_overlap_fast(const std::map<std::string, OutputNode> &output_nodes) {
+double calc_overlap_fast(const std::map<std::string, OutputNode>& output_nodes) {
     double overlap_max = 0.0;
     for (auto it_a = output_nodes.begin(); it_a != output_nodes.end(); ++it_a) {
         for (auto it_b = std::next(it_a); it_b != output_nodes.end(); ++it_b) {
@@ -166,10 +168,10 @@ double calc_overlap_fast(const std::map<std::string, OutputNode> &output_nodes) 
     return overlap_max;
 }
 
-double calc_distance_max(const std::map<std::string, OutputNode> &output_nodes,
-                         const std::vector<Edge> &edges) {
+double calc_distance_max(const std::map<std::string, OutputNode>& output_nodes,
+                         const std::vector<Edge>& edges) {
     double distance_max = 0.0;
-    for (const auto &[node_0, node_1]: edges) {
+    for (const auto& [node_0, node_1] : edges) {
         const auto& node_a = output_nodes.at(node_0);
         const auto& node_b = output_nodes.at(node_1);
         distance_max = std::max(distance_max, calc_distance(node_a, node_b));
@@ -177,9 +179,9 @@ double calc_distance_max(const std::map<std::string, OutputNode> &output_nodes,
     return distance_max;
 }
 
-Score calc_score(const std::map<std::string, Node> &input_nodes,
-                  const std::map<std::string, OutputNode> &output_nodes,
-                  const std::vector<Edge> &edges) {
+Score calc_score(const std::map<std::string, Node>& input_nodes,
+                 const std::map<std::string, OutputNode>& output_nodes,
+                 const std::vector<Edge>& edges) {
     const auto n = static_cast<u_int>(input_nodes.size());
     const auto k = static_cast<u_int>(edges.size());
     double overlap = calc_overlap_fast(output_nodes) * 100;
@@ -194,15 +196,14 @@ double perturb(double coordinate, double max_perturbation, std::mt19937& rng, st
     return coordinate + max_perturbation * dist(rng);
 }
 
-void optimize_positions(const std::map<std::string, Node> &input_nodes,
-    std::map<std::string, OutputNode>& output_nodes,
-    const std::vector<Edge>& edges,
-    int iterations,
-    double temperature = 1.0, // Initial temperature for simulated annealing
-    double cooling_rate = 0.99, // Cooling rate for simulated annealing
-    double max_perturbation = 0.1 // Define the maximum perturbation for x and y coordinates
-    ) {
-
+void optimize_positions(const std::map<std::string, Node>& input_nodes,
+                        std::map<std::string, OutputNode>& output_nodes,
+                        const std::vector<Edge>& edges,
+                        int iterations,
+                        double temperature = 1.0, // Initial temperature for simulated annealing
+                        double cooling_rate = 0.99, // Cooling rate for simulated annealing
+                        double max_perturbation = 0.1 // Define the maximum perturbation for x and y coordinates
+) {
     std::random_device rd;
     std::mt19937 rng(rd());
     std::uniform_real_distribution<> dist(-1.0, 1.0);
@@ -238,9 +239,7 @@ void optimize_positions(const std::map<std::string, Node> &input_nodes,
     }
 }
 
-const auto VERSION = "1.0.0";
-
-void save_nodes(std::map<std::string, OutputNode> nodes_output, std::string save_file, double total_score) {
+void save_nodes(std::map<std::string, OutputNode>& nodes_output, std::string& save_file, double& total_score) {
     // sort nodes_output by node.second.idx
     std::vector<OutputNode> sorted_nodes_output;
     for (const auto& node : nodes_output) {
@@ -266,7 +265,8 @@ void save_nodes(std::map<std::string, OutputNode> nodes_output, std::string save
     } else {
         std::ofstream output_file_sorted(save_file);
         for (const auto& node : sorted_nodes_output) {
-            output_file_sorted << std::setprecision(10) << node.x << " " << node.y << " " << std::setprecision(17) << node.radius << " " << node.node << " " << node.idx << std::endl;
+            output_file_sorted << std::setprecision(10) << node.x << " " << node.y << " " << std::setprecision(17) <<
+                node.radius << " " << node.node << " " << node.idx << std::endl;
         }
         output_file_sorted.close();
     }
@@ -277,14 +277,19 @@ int main(int argc, char* argv[]) {
     bool score_only = false;
     int iterations = 0; // number of iterations for the optimization
     double max_perturbation = 0.0; // maximum perturbation for x and y coordinates
+    double temperature = 0.0; // Initial temperature for simulated annealing
+    double cooling_rate = 0.0; // Cooling rate for simulated annealing
 
-    std::string input_file, output_file;
+    std::string input_file;
+    std::vector<std::string> output_files;
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
         if (arg == "-h" || arg == "--help") {
             std::cerr << "Usage: " << argv[0] << " [-h|--help] [-v|--version]" << std::endl;
-            std::cerr << "       " << argv[0] << " [-s|--score] input_file output_file" << std::endl;
-            std::cerr << "       " << argv[0] << " input_file output_file [iterations] [max_pertubation]" << std::endl;
+            std::cerr << "       " << argv[0] << " [-s|--score] input_file output_file [output_file_2, ...]" <<
+                std::endl;
+            std::cerr << "       " << argv[0] << " input_file output_file [iterations=200] [max_pertubation=0.1]" <<
+                std::endl;
             return 0;
         } else if (arg == "-v" || arg == "--version") {
             std::cout << "Version " << VERSION << std::endl;
@@ -293,19 +298,49 @@ int main(int argc, char* argv[]) {
             score_only = true;
         } else if (input_file.empty()) {
             input_file = arg;
-        } else if (output_file.empty()) {
-            output_file = arg;
+        } else if (output_files.empty() || score_only) {
+            output_files.push_back(arg);
         } else if (iterations == 0) {
-            iterations = std::stoi(arg);
+            try {
+                iterations = std::stoi(arg);
+            } catch (const std::invalid_argument& e) {
+                std::cerr << "Invalid argument for iterations" << std::endl;
+                return 1;
+            }
         } else if (max_perturbation == 0.0) {
-            max_perturbation = std::stod(arg);
+            try {
+                max_perturbation = std::stod(arg);
+            } catch (const std::invalid_argument& e) {
+                std::cerr << "Invalid argument for max_perturbation" << std::endl;
+                return 1;
+            }
+        } else if (temperature == 0.0) {
+            try {
+                temperature = std::stod(arg);
+                if (temperature <= 0.0) {
+                    throw std::invalid_argument("Temperature must be greater than 0");
+                }
+            } catch (const std::invalid_argument& e) {
+                std::cerr << "Invalid argument for temperature" << std::endl;
+                return 1;
+            }
+        } else if (cooling_rate == 0.0) {
+            try {
+                cooling_rate = std::stod(arg);
+                if (cooling_rate <= 0.0 || cooling_rate >= 1.0) {
+                    throw std::invalid_argument("Cooling rate must be between 0 and 1");
+                }
+            } catch (const std::invalid_argument& e) {
+                std::cerr << "Invalid argument for cooling_rate" << std::endl;
+                return 1;
+            }
         } else {
             std::cerr << "Too many arguments" << std::endl;
             return 1;
         }
     }
 
-    if (input_file.empty() || output_file.empty()) {
+    if (input_file.empty() || output_files.empty()) {
         std::cerr << "No input file or output file specified" << std::endl;
         return 1;
     }
@@ -315,27 +350,38 @@ int main(int argc, char* argv[]) {
     if (max_perturbation == 0.0) {
         max_perturbation = 0.1;
     }
+    if (temperature == 0.0) {
+        temperature = 1.0;
+    }
+    if (cooling_rate == 0.0) {
+        cooling_rate = 0.99;
+    }
 
     auto time_global_start = std::chrono::high_resolution_clock::now();
 
-
     auto nodes_input = read_input_nodes(input_file);
     auto edges = read_edges(input_file);
-    auto nodes_output = read_output_nodes(output_file);
-
-    Score start_score = calc_score(nodes_input, nodes_output, edges);
-    std::cout << "Score:       " << start_score.total_score << " (Overlap: " << start_score.overlap << ", Distance " << start_score.distance << ", Angle: " << start_score.angle << ")" << std::endl;
-
-    if (score_only) {
-        return 0;
+    std::map<std::string, OutputNode> nodes_output;
+    std::string output_file;
+    Score start_score;
+    for (const std::string& ofile : output_files) {
+        output_file = ofile;
+        nodes_output = read_output_nodes(output_file);
+        start_score = calc_score(nodes_input, nodes_output, edges);
+        std::cout << output_file << std::endl;
+        std::cout << "Score:       " << start_score.total_score << " (Overlap: " << start_score.overlap << ", Distance "
+            << start_score.distance << ", Angle: " << start_score.angle << ")" << std::endl;
     }
 
+    if (score_only) return 0;
+
     // Optimize the positions of the nodes
-    optimize_positions(nodes_input, nodes_output, edges, iterations, 1.0, 0.99, max_perturbation);
+    optimize_positions(nodes_input, nodes_output, edges, iterations, temperature, cooling_rate, max_perturbation);
 
     // Calculate score
     Score case_score = calc_score(nodes_input, nodes_output, edges);
-    std::cout << "Final Score: " << case_score.total_score << " (Overlap: " << case_score.overlap << ", Distance " << case_score.distance << ", Angle: " << case_score.angle << ")" << std::endl;
+    std::cout << "Final Score: " << case_score.total_score << " (Overlap: " << case_score.overlap << ", Distance " <<
+        case_score.distance << ", Angle: " << case_score.angle << ")" << std::endl;
 
     if (start_score.total_score < std::floor(case_score.total_score)) {
         std::cout << "Score improved by " << case_score.total_score - start_score.total_score << std::endl;
@@ -349,7 +395,8 @@ int main(int argc, char* argv[]) {
     std::chrono::duration<double, std::milli> total_elapsed = time_global_stop - time_global_start;
 
     if (total_elapsed.count() > 60000) {
-        std::cout << "Total Time: " << total_elapsed.count() / 60000 << " min " << (int)std::fmod(total_elapsed.count(), 60000) / 1000 << " s" << std::endl;
+        std::cout << "Total Time: " << total_elapsed.count() / 60000 << " min " << (int)std::fmod(
+            total_elapsed.count(), 60000) / 1000 << " s" << std::endl;
     } else if (total_elapsed.count() > 1000) {
         std::cout << "Total Time: " << total_elapsed.count() / 1000 << " s" << std::endl;
     } else {
