@@ -10,36 +10,7 @@
 #include <iterator>
 #include <random>
 
-const auto VERSION = "1.0.0";
-
-struct Node {
-    std::string id;
-    double value;
-    double x;
-    double y;
-};
-
-struct Edge {
-    std::string node_0;
-    std::string node_1;
-};
-
-struct OutputNode {
-    double x;
-    double y;
-    double radius;
-    std::string node;
-    int idx;
-};
-
-struct Score {
-    u_int n;
-    u_int k;
-    double overlap;
-    double distance;
-    double angle;
-    double total_score;
-};
+#include "graph_optimization.h"
 
 std::map<std::string, Node> read_input_nodes(const std::string& file_path) {
     std::map<std::string, Node> nodes;
@@ -286,15 +257,15 @@ int main(int argc, char* argv[]) {
         std::string arg = argv[i];
         if (arg == "-h" || arg == "--help") {
             std::cerr << "Usage: " << argv[0] << " [-h|--help] [-v|--version]" << std::endl;
-            std::cerr << "       " << argv[0] << " [-s|--score] input_file output_file [output_file_2, ...]" <<
-                std::endl;
-            std::cerr << "       " << argv[0] << " input_file output_file [iterations=200] [max_pertubation=0.1]" <<
-                std::endl;
+            std::cerr << "       " << argv[0] << " [-s|--score] input_file output_file [output_file_2, ...]" << std::endl;
+            std::cerr << "       " << argv[0] << " input_file output_file [iterations=200] [max_pertubation=0.1] [temperature=1.0] [cooling_rate=0.99]" << std::endl;
             return 0;
-        } else if (arg == "-v" || arg == "--version") {
+        }
+        if (arg == "-v" || arg == "--version") {
             std::cout << "Version " << VERSION << std::endl;
             return 0;
-        } else if (arg == "-s" || arg == "--score") {
+        }
+        if (arg == "-s" || arg == "--score") {
             score_only = true;
         } else if (input_file.empty()) {
             input_file = arg;
