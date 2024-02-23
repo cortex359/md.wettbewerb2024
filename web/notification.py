@@ -8,8 +8,8 @@ def send_notification(subject: str, text: str):
     sender_email = "compute@tsunami.lfi.rwth-aachen.de"
     receiver_email = "christian.thelen@rwth-aachen.de"
 
-    message = "Subject: {subject}\n"
-    message += f"{text}\n"
+    message = f"Subject: {subject}\n"
+    message += text + "\n"
 
     context = ssl.create_default_context()
     with smtplib.SMTP(smtp_server, port) as server:

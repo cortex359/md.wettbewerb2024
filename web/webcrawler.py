@@ -63,7 +63,8 @@ def refresh_scores(last_modified_time: datetime):
     teams, ranking = create_team_list(no_cache=True)
     score_log = read_score_log()
 
-    prepare_mail = ""
+    mail_subject = ""
+    prepare_mail = "Scores from " + last_modified_time.strftime('%Y-%m-%d %H:%M:%S') + ":\n\n"
     tetris_updated = False
     for team in ranking:
         last_score_date, last_score, last_bonus = get_last_score(score_log, team)
@@ -83,18 +84,16 @@ def refresh_scores(last_modified_time: datetime):
 
             if team.name == "tetris-for-the-win" and team.score != last_score:
                 tetris_updated = True
-            if team.score > teams["tau"].score or (tetris_updated and team.name == "tetris-for-the-win"):
-                prepare_mail += f"{team.name}: {last_score+last_bonus} → {team.score + team.bonus}\n"
+
+            prepare_mail = f"{prepare_mail}{team.name}: {last_score + last_bonus} → {team.score + team.bonus}\n"
 
     if ranking[0].name != "tau":
         mail_subject = f'New 1st place {ranking[0].name} with {ranking[0].score + ranking[0].bonus}!'
     elif tetris_updated:
         mail_subject = f'Tetris new score {teams["tetris-for-the-win"].score + teams["tetris-for-the-win"].bonus}!'
-    else:
-        mail_subject = "Scoring update!"
 
-    if prepare_mail != "":
-        print(f'{Fore.GREEN}[MAIL] Sending mail with Subject "{mail_subject}" and content:\n{prepare_mail}{Style.RESET_ALL}')
+    if mail_subject != "":
+        print(f'{Fore.GREEN}[MAIL] Sending mail with Subject "{mail_subject}".{Style.RESET_ALL}')
         send_notification(mail_subject, prepare_mail)
 
 
