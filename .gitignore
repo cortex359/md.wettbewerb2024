@@ -161,3 +161,5 @@ cython_debug/
 test_results
 
 web/data
+!web/data/scores.log
+!web/data/web.log
