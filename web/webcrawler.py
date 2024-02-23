@@ -5,6 +5,7 @@ from colorama import Fore, Back, Style
 import locale
 import os
 from datetime import datetime
+from notification import send_notification
 
 groups = ['tau', 'tetris-for-the-win', 'phoenix', 'fabsch-225', 'nullptr', 'code-mates', 'koeln', 'map-maniac']
 ignore_groups = ['md-demo']
@@ -62,6 +63,8 @@ def refresh_scores(last_modified_time: datetime):
     teams, ranking = create_team_list(no_cache=True)
     score_log = read_score_log()
 
+    prepare_mail = ""
+    tetris_updated = False
     for team in ranking:
         last_score_date, last_score, last_bonus = get_last_score(score_log, team)
 
@@ -77,6 +80,21 @@ def refresh_scores(last_modified_time: datetime):
             max_score_date, max_score = get_max_score(score_log, team)
             if max_score > team.score:
                 print(f'{Fore.BLUE}[SCORE] {team.name} max score {max_score} was on {max_score_date}{Style.RESET_ALL}')
+
+            if team.score > teams["tau"].score or (team.name == "tetris-for-the-win" and team.score != last_score):
+                prepare_mail += f"{team.name}: {last_score+last_bonus} → {team.score + team.bonus}\n"
+            if team.name == "tetris-for-the-win" and team.score != last_score:
+                tetris_updated = True
+
+    if ranking[0].name != "tau":
+        mail_subject = f'New 1st place {ranking[0].name} with {ranking[0].score + ranking[0].bonus}!'
+    elif tetris_updated:
+        mail_subject = f'Tetris new score {teams["tetris-for-the-win"].score + teams["tetris-for-the-win"].bonus}!'
+    else:
+        mail_subject = "Scoring update!"
+
+    if prepare_mail != "":
+        send_notification(mail_subject, prepare_mail)
 
 
 if __name__ == "__main__":
