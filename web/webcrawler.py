@@ -87,8 +87,8 @@ if __name__ == "__main__":
         score_str = f'{team.score:,d}'
 
         # format with . as thousands separator
-        bonus_str = bonus_str.replace(',', '.')
-        score_str = score_str.replace(',', '.')
+        bonus_str = f'{bonus_str.replace(",", "."):>7}'
+        score_str = f'{score_str.replace(",", "."):>7}'
 
         last_score_date, last_score, last_bonus = get_last_score(score_log, team)
         if team.score > last_score:
@@ -106,4 +106,4 @@ if __name__ == "__main__":
             max_score_str = f'{max_score:,d}'.replace(',', '.')
             max_score_info = f'{Fore.BLUE} (max {max_score_str} on {max_score_date}){Fore.RESET}'
 
-        print(f'{team.name:^18s} {score_str:>7} {bonus_str:>7} {max_score_info}')
+        print(f'{team.name:>18s} {score_str} {bonus_str} {max_score_info}')
