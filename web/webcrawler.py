@@ -85,16 +85,19 @@ def refresh_scores(last_modified_time: datetime):
             if team.name == "tetris-for-the-win" and team.score != last_score:
                 tetris_updated = True
 
-            prepare_mail = f"{prepare_mail}{team.name}: {last_score + last_bonus} → {team.score + team.bonus}\n"
+            prepare_mail = f"{prepare_mail}{team.name:>18s}: {last_score + last_bonus:,9d} -> {team.score + team.bonus:,9d}\n"
+        else:
+            prepare_mail = f"{prepare_mail}{team.name:>18s}: {team.score + team.bonus:,9d}\n"
 
     if ranking[0].name != "tau":
         mail_subject = f'New 1st place {ranking[0].name} with {ranking[0].score + ranking[0].bonus}!'
     elif tetris_updated:
-        mail_subject = f'Tetris new score {teams["tetris-for-the-win"].score + teams["tetris-for-the-win"].bonus}!'
+        mail_subject = f'Tetris new score {teams["tetris-for-the-win"].score + teams["tetris-for-the-win"].bonus:,d}!'
+        mail_subject = mail_subject.replace(",", ".")
 
     if mail_subject != "":
         print(f'{Fore.GREEN}[MAIL] Sending mail with Subject "{mail_subject}".{Style.RESET_ALL}')
-        send_notification(mail_subject, prepare_mail)
+        send_notification(mail_subject, prepare_mail.replace(",", "."))
 
 
 if __name__ == "__main__":
