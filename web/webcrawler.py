@@ -81,10 +81,10 @@ def refresh_scores(last_modified_time: datetime):
             if max_score > team.score:
                 print(f'{Fore.BLUE}[SCORE] {team.name} max score {max_score} was on {max_score_date}{Style.RESET_ALL}')
 
-            if team.score > teams["tau"].score or (team.name == "tetris-for-the-win" and team.score != last_score):
-                prepare_mail += f"{team.name}: {last_score+last_bonus} → {team.score + team.bonus}\n"
             if team.name == "tetris-for-the-win" and team.score != last_score:
                 tetris_updated = True
+            if team.score > teams["tau"].score or (tetris_updated and team.name == "tetris-for-the-win"):
+                prepare_mail += f"{team.name}: {last_score+last_bonus} → {team.score + team.bonus}\n"
 
     if ranking[0].name != "tau":
         mail_subject = f'New 1st place {ranking[0].name} with {ranking[0].score + ranking[0].bonus}!'
@@ -94,6 +94,7 @@ def refresh_scores(last_modified_time: datetime):
         mail_subject = "Scoring update!"
 
     if prepare_mail != "":
+        print(f'{Fore.GREEN}[MAIL] Sending mail with Subject "{mail_subject}" and content:\n{prepare_mail}{Style.RESET_ALL}')
         send_notification(mail_subject, prepare_mail)
 
 
