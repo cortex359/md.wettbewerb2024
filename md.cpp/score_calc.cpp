@@ -327,12 +327,13 @@ int main(int argc, char* argv[]) {
     for (const std::string& ofile : output_files) {
         output_file = ofile;
         nodes_output = read_output_nodes(output_file);
-        start_score = calc_score(nodes_input, nodes_output, edges);
+        Score start_score = calc_score(nodes_input, nodes_output, edges);
         std::cout << output_file << std::endl;
         std::cout << "Score:       " << start_score.total_score << " (Overlap: " << start_score.overlap << ", Distance "
             << start_score.distance << ", Angle: " << start_score.angle << ")" << std::endl;
     }
 
+    Score start_score = calc_score(nodes_input, nodes_output, edges);
     if (score_only) return 0;
 
     // Optimize the positions of the nodes
@@ -355,8 +356,8 @@ int main(int argc, char* argv[]) {
     std::chrono::duration<double, std::milli> total_elapsed = time_global_stop - time_global_start;
 
     if (total_elapsed.count() > 60000) {
-        std::cout << "Total Time: " << total_elapsed.count() / 60000 << " min " << (int)std::fmod(
-            total_elapsed.count(), 60000) / 1000 << " s" << std::endl;
+        std::cout << "Total Time: " << total_elapsed.count() / 60000 << " min " << static_cast<int>(std::fmod(
+            total_elapsed.count(), 60000)) / 1000 << " s" << std::endl;
     } else if (total_elapsed.count() > 1000) {
         std::cout << "Total Time: " << total_elapsed.count() / 1000 << " s" << std::endl;
     } else {
