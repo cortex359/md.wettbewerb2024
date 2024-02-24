@@ -153,11 +153,11 @@ Score calc_score(const std::map<std::string, Node>& input_nodes,
                  const std::vector<Edge>& edges) {
     const auto n = static_cast<u_int>(input_nodes.size());
     const auto k = static_cast<u_int>(edges.size());
-    double overlap = calc_overlap_fast(output_nodes) * 100;
-    double distance = calc_distance_max(output_nodes, edges) * 100;
-    double angle = calc_angle_max(input_nodes, output_nodes, edges) * 100;
-    double total_score = 1000. * (n + k) / (1 + 2 * overlap + distance + 0.1 * angle);
-    Score score = {n, k, overlap, distance, angle, total_score};
+    const double overlap = calc_overlap_fast(output_nodes) * 100;
+    const double distance = calc_distance_max(output_nodes, edges) * 100;
+    const double angle = calc_angle_max(input_nodes, output_nodes, edges) * 100;
+    const double total_score = 1000. * (n + k) / (1 + 2 * overlap + distance + 0.1 * angle);
+    const Score score = {n, k, overlap, distance, angle, total_score};
     return score;
 }
 
