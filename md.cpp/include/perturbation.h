@@ -19,7 +19,7 @@
 #include <random>
 
 double perturb(double coordinate, double max_perturbation, std::mt19937& rng, std::uniform_real_distribution<>& dist);
-void optimize_positions(const std::map<std::string, Node>& input_nodes,
+unsigned long int optimize_positions(const std::map<std::string, Node>& input_nodes,
                         std::map<std::string, Node>& output_nodes,
                         const std::vector<Edge>& edges,
                         int iterations,

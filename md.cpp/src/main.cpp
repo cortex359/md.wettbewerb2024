@@ -7,7 +7,7 @@
 int main(int argc, char* argv[]) {
     // Commandline Arguments
     bool score_only = false;
-    int iterations = 0; // number of iterations for the optimization
+    int runtime = 0; // number of seconds to run the optimization
     double max_perturbation = 0.0; // maximum perturbation for x and y coordinates
     double temperature = 0.0; // Initial temperature for simulated annealing
     double cooling_rate = 0.0; // Cooling rate for simulated annealing
@@ -19,7 +19,7 @@ int main(int argc, char* argv[]) {
         if (arg == "-h" || arg == "--help") {
             std::cerr << "Usage: " << argv[0] << " [-h|--help] [-v|--version]" << std::endl;
             std::cerr << "       " << argv[0] << " [-s|--score] input_file output_file [output_file_2, ...]" << std::endl;
-            std::cerr << "       " << argv[0] << " input_file output_file [iterations=200] [max_pertubation=0.1] [temperature=1.0] [cooling_rate=0.99]" << std::endl;
+            std::cerr << "       " << argv[0] << " input_file output_file [seconds=10] [max_pertubation=0.1] [temperature=1.0] [cooling_rate=0.99]" << std::endl;
             return 0;
         }
         if (arg == "-v" || arg == "--version") {
@@ -32,11 +32,11 @@ int main(int argc, char* argv[]) {
             input_file = arg;
         } else if (output_files.empty() || score_only) {
             output_files.push_back(arg);
-        } else if (iterations == 0) {
+        } else if (runtime == 0) {
             try {
-                iterations = std::stoi(arg);
+                runtime = std::stoi(arg);
             } catch (const std::invalid_argument& e) {
-                std::cerr << "Invalid argument for iterations" << std::endl;
+                std::cerr << "Invalid argument for runtime" << std::endl;
                 return 1;
             }
         } else if (max_perturbation == 0.0) {
@@ -76,8 +76,8 @@ int main(int argc, char* argv[]) {
         std::cerr << "No input file or output file specified" << std::endl;
         return 1;
     }
-    if (iterations == 0) {
-        iterations = 200;
+    if (runtime == 0) {
+        runtime = 10;
     }
     if (max_perturbation == 0.0) {
         max_perturbation = 0.1;
@@ -110,7 +110,7 @@ int main(int argc, char* argv[]) {
     auto time_global_start = std::chrono::high_resolution_clock::now();
 
     // Optimize the positions of the nodes
-    optimize_positions(nodes_input, nodes_output, edges, iterations, temperature, cooling_rate, max_perturbation);
+    const auto iterations = optimize_positions(nodes_input, nodes_output, edges, runtime, temperature, cooling_rate, max_perturbation);
 
     // Calculate score
     Score case_score = calc_score(nodes_input, nodes_output, edges);
@@ -127,6 +127,7 @@ int main(int argc, char* argv[]) {
 
     auto time_global_stop = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> total_elapsed = time_global_stop - time_global_start;
+    std::chrono::duration<double, std::nano> total_elapsed_ns = time_global_stop - time_global_start;
 
     if (total_elapsed.count() > 60000) {
         std::cout << "Total Time: " << total_elapsed.count() / 60000 << " min " << static_cast<int>(std::fmod(
@@ -136,7 +137,8 @@ int main(int argc, char* argv[]) {
     } else {
         std::cout << "Total Time: " << total_elapsed.count() << " ms" << std::endl;
     }
-    std::cout << "Time per 1000 iterations: " << (total_elapsed.count() / iterations) * 1000 << " ms/1k iterations" << std::endl;
+    std::cout << "Iterations: " << iterations << std::endl;
+    std::cout << "Time per 1000 iterations: " << (total_elapsed_ns.count() / static_cast<double>(iterations) / 1000) << " µs/iterations" << std::endl;
 
     return 0;
 }
