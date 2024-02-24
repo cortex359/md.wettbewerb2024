@@ -1,5 +1,7 @@
 #!/usr/bin/env zsh
 
+setopt numeric_glob_sort
+
 typeset -A scores=()
 
 for f in *_score_*.txt(on) ; do {
