@@ -323,17 +323,17 @@ int main(int argc, char* argv[]) {
     auto edges = read_edges(input_file);
     std::map<std::string, Node> nodes_output;
     std::string output_file;
-    Score start_score = {0, 0, 0, 0, 0, 0};
+    Score start_score = {0, 0, -1.0, -1.0, -1.0, -1.0};
     for (const std::string& ofile : output_files) {
         output_file = ofile;
         nodes_output = read_output_nodes(output_file);
-        Score start_score = calc_score(nodes_input, nodes_output, edges);
+        start_score = calc_score(nodes_input, nodes_output, edges);
         std::cout << output_file << std::endl;
         std::cout << "Score:       " << start_score.total_score << " (Overlap: " << start_score.overlap << ", Distance "
             << start_score.distance << ", Angle: " << start_score.angle << ")" << std::endl;
     }
 
-    Score start_score = calc_score(nodes_input, nodes_output, edges);
+    start_score = calc_score(nodes_input, nodes_output, edges);
     if (score_only) return 0;
 
     // Optimize the positions of the nodes
