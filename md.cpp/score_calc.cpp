@@ -87,13 +87,14 @@ double calc_overlap(const Node& node_a, const Node& node_b) {
     return dist >= R ? 0.0 : (R - dist) / R;
 }
 
-double calc_distance(const Node& node_a, const Node& node_b) {
-    if (node_a.node == node_b.node) {
-        return 0.0;
+double calc_overlap_fast(const std::map<std::string, Node>& output_nodes) {
+    double overlap_max = 0.0;
+    for (auto it_a = output_nodes.begin(); it_a != output_nodes.end(); ++it_a) {
+        for (auto it_b = std::next(it_a); it_b != output_nodes.end(); ++it_b) {
+            overlap_max = std::max(overlap_max, calc_overlap(it_a->second, it_b->second));
+        }
     }
-    double dist = std::hypot(node_a.x - node_b.x, node_a.y - node_b.y);
-    double R = node_a.radius + node_b.radius;
-    return dist < R ? 0.0 : (dist - R) / R;
+    return overlap_max;
 }
 
 double calc_angle(const Node& node_a, const Node& node_b) {
@@ -118,14 +119,13 @@ double calc_angle_max(const std::map<std::string, Node>& input_nodes,
     return angle_max;
 }
 
-double calc_overlap_fast(const std::map<std::string, Node>& output_nodes) {
-    double overlap_max = 0.0;
-    for (auto it_a = output_nodes.begin(); it_a != output_nodes.end(); ++it_a) {
-        for (auto it_b = std::next(it_a); it_b != output_nodes.end(); ++it_b) {
-            overlap_max = std::max(overlap_max, calc_overlap(it_a->second, it_b->second));
-        }
+double calc_distance(const Node& node_a, const Node& node_b) {
+    if (node_a.node == node_b.node) {
+        return 0.0;
     }
-    return overlap_max;
+    double dist = std::hypot(node_a.x - node_b.x, node_a.y - node_b.y);
+    double R = node_a.radius + node_b.radius;
+    return dist < R ? 0.0 : (dist - R) / R;
 }
 
 double calc_distance_max(const std::map<std::string, Node>& output_nodes,
@@ -329,6 +329,7 @@ int main(int argc, char* argv[]) {
         nodes_output = read_output_nodes(output_file);
         start_score = calc_score(nodes_input, nodes_output, edges);
         std::cout << output_file << std::endl;
+        std::cout << "k:" << start_score.k << " n:" << start_score.n << std::endl;
         std::cout << "Score:       " << start_score.total_score << " (Overlap: " << start_score.overlap << ", Distance "
             << start_score.distance << ", Angle: " << start_score.angle << ")" << std::endl;
     }
