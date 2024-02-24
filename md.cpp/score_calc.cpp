@@ -17,12 +17,12 @@ std::map<std::string, Node> read_input_nodes(const std::string& file_path) {
     std::ifstream file(file_path);
     std::string line, id;
     double value, x, y;
-    // std::cout << "Running read_input_nodes on file " << file_path << std::endl;
+
     // check if file exists
     if (!file) {
-        std::cerr << "File " << file_path << " does not exist." << std::endl;
-        return nodes;
+        throw std::runtime_error("Failed to open file: " + file_path);
     }
+
     unsigned int idx = 0;
     while (std::getline(file, line) && !line.empty()) {
         std::istringstream iss(line);
@@ -36,8 +36,11 @@ std::map<std::string, Node> read_input_nodes(const std::string& file_path) {
 
 std::vector<Edge> read_edges(const std::string& file_path) {
     std::vector<Edge> edges;
-    std::ifstream file(file_path);
     std::string line, node_0, node_1;
+    std::ifstream file(file_path);
+    if (!file) {
+        throw std::runtime_error("Failed to open file: " + file_path);
+    }
 
     bool skip = true;
     while (std::getline(file, line)) {
@@ -50,8 +53,11 @@ std::vector<Edge> read_edges(const std::string& file_path) {
         }
         std::istringstream iss(line);
         iss >> node_0 >> node_1;
-        // std::cout << "Reading edge: " << node_0 << " " << node_1 << std::endl;
         edges.push_back({node_0, node_1});
+    }
+
+    if (edges.empty()) {
+        throw std::runtime_error("No edges found in file: " + file_path);
     }
 
     return edges;
@@ -59,10 +65,13 @@ std::vector<Edge> read_edges(const std::string& file_path) {
 
 std::map<std::string, Node> read_output_nodes(const std::string& file_path) {
     std::map<std::string, Node> nodes;
-    std::ifstream file(file_path);
     std::string line, name;
     double x, y, radius;
     unsigned int idx;
+    std::ifstream file(file_path);
+    if (!file) {
+        throw std::runtime_error("Failed to open file: " + file_path);
+    }
 
     // check if file exists
     if (!file) {
