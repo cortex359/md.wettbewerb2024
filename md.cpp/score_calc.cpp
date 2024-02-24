@@ -23,10 +23,12 @@ std::map<std::string, Node> read_input_nodes(const std::string& file_path) {
         std::cerr << "File " << file_path << " does not exist." << std::endl;
         return nodes;
     }
+    unsigned int idx = 0;
     while (std::getline(file, line) && !line.empty()) {
         std::istringstream iss(line);
         iss >> id >> value >> x >> y;
-        nodes[id] = {id, value, x, y};
+        nodes[id] = {idx, id, value, sqrt(value), x, y};
+        ++idx;
     }
 
     return nodes;
@@ -55,12 +57,12 @@ std::vector<Edge> read_edges(const std::string& file_path) {
     return edges;
 }
 
-std::map<std::string, OutputNode> read_output_nodes(const std::string& file_path) {
-    std::map<std::string, OutputNode> nodes;
+std::map<std::string, Node> read_output_nodes(const std::string& file_path) {
+    std::map<std::string, Node> nodes;
     std::ifstream file(file_path);
-    std::string line, id;
+    std::string line, name;
     double x, y, radius;
-    int idx;
+    unsigned int idx;
 
     // check if file exists
     if (!file) {
@@ -69,14 +71,14 @@ std::map<std::string, OutputNode> read_output_nodes(const std::string& file_path
     }
     while (std::getline(file, line)) {
         std::istringstream iss(line);
-        iss >> x >> y >> radius >> id >> idx;
-        nodes[id] = {x, y, radius, id, idx};
+        iss >> x >> y >> radius >> name >> idx;
+        nodes[name] = Node({idx, name, radius*radius, radius, x, y});
     }
 
     return nodes;
 }
 
-double calc_overlap(const OutputNode& node_a, const OutputNode& node_b) {
+double calc_overlap(const Node& node_a, const Node& node_b) {
     if (node_a.node == node_b.node) {
         return 0.0;
     }
@@ -85,7 +87,7 @@ double calc_overlap(const OutputNode& node_a, const OutputNode& node_b) {
     return dist >= R ? 0.0 : (R - dist) / R;
 }
 
-double calc_distance(const OutputNode& node_a, const OutputNode& node_b) {
+double calc_distance(const Node& node_a, const Node& node_b) {
     if (node_a.node == node_b.node) {
         return 0.0;
     }
@@ -95,27 +97,14 @@ double calc_distance(const OutputNode& node_a, const OutputNode& node_b) {
 }
 
 double calc_angle(const Node& node_a, const Node& node_b) {
-    if (node_a.id == node_b.id) {
-        return 0.0;
-    }
-    double delta_x = node_a.x - node_b.x;
-    double delta_y = node_a.y - node_b.y;
-    //std::cout << "Delta x: " << delta_x << ", Delta y: " << delta_y << std::endl;
-    return std::atan2(delta_y, delta_x) / M_PI;
-}
-
-double calc_angle(const OutputNode& node_a, const OutputNode& node_b) {
     if (node_a.node == node_b.node) {
         return 0.0;
     }
-    double delta_x = node_a.x - node_b.x;
-    double delta_y = node_a.y - node_b.y;
-    //std::cout << "Delta x: " << delta_x << ", Delta y: " << delta_y << std::endl;
-    return std::atan2(delta_y, delta_x) / M_PI;
+    return std::atan2(node_a.y - node_b.y, node_a.x - node_b.x) / M_PI;
 }
 
 double calc_angle_max(const std::map<std::string, Node>& input_nodes,
-                      const std::map<std::string, OutputNode>& output_nodes,
+                      const std::map<std::string, Node>& output_nodes,
                       const std::vector<Edge>& edges) {
     double angle_max = 0.0;
     for (const auto& [node_0, node_1] : edges) {
@@ -129,7 +118,7 @@ double calc_angle_max(const std::map<std::string, Node>& input_nodes,
     return angle_max;
 }
 
-double calc_overlap_fast(const std::map<std::string, OutputNode>& output_nodes) {
+double calc_overlap_fast(const std::map<std::string, Node>& output_nodes) {
     double overlap_max = 0.0;
     for (auto it_a = output_nodes.begin(); it_a != output_nodes.end(); ++it_a) {
         for (auto it_b = std::next(it_a); it_b != output_nodes.end(); ++it_b) {
@@ -139,7 +128,7 @@ double calc_overlap_fast(const std::map<std::string, OutputNode>& output_nodes) 
     return overlap_max;
 }
 
-double calc_distance_max(const std::map<std::string, OutputNode>& output_nodes,
+double calc_distance_max(const std::map<std::string, Node>& output_nodes,
                          const std::vector<Edge>& edges) {
     double distance_max = 0.0;
     for (const auto& [node_0, node_1] : edges) {
@@ -151,7 +140,7 @@ double calc_distance_max(const std::map<std::string, OutputNode>& output_nodes,
 }
 
 Score calc_score(const std::map<std::string, Node>& input_nodes,
-                 const std::map<std::string, OutputNode>& output_nodes,
+                 const std::map<std::string, Node>& output_nodes,
                  const std::vector<Edge>& edges) {
     const auto n = static_cast<u_int>(input_nodes.size());
     const auto k = static_cast<u_int>(edges.size());
@@ -168,7 +157,7 @@ double perturb(double coordinate, double max_perturbation, std::mt19937& rng, st
 }
 
 void optimize_positions(const std::map<std::string, Node>& input_nodes,
-                        std::map<std::string, OutputNode>& output_nodes,
+                        std::map<std::string, Node>& output_nodes,
                         const std::vector<Edge>& edges,
                         int iterations,
                         double temperature = 1.0, // Initial temperature for simulated annealing
@@ -183,7 +172,7 @@ void optimize_positions(const std::map<std::string, Node>& input_nodes,
 
     for (int i = 0; i < iterations; ++i) {
         for (auto& node_pair : output_nodes) {
-            OutputNode& node = node_pair.second;
+            Node& node = node_pair.second;
 
             // Save the current position
             double original_x = node.x;
@@ -210,13 +199,13 @@ void optimize_positions(const std::map<std::string, Node>& input_nodes,
     }
 }
 
-void save_nodes(std::map<std::string, OutputNode>& nodes_output, std::string& save_file, double& total_score) {
+void save_nodes(const std::map<std::string, Node>& nodes_output, std::string& save_file, const double & total_score) {
     // sort nodes_output by node.second.idx
-    std::vector<OutputNode> sorted_nodes_output;
+    std::vector<Node> sorted_nodes_output;
     for (const auto& node : nodes_output) {
         sorted_nodes_output.push_back(node.second);
     }
-    std::sort(sorted_nodes_output.begin(), sorted_nodes_output.end(), [](const OutputNode& a, const OutputNode& b) {
+    std::sort(sorted_nodes_output.begin(), sorted_nodes_output.end(), [](const Node& a, const Node& b) {
         return a.idx < b.idx;
     });
 
@@ -332,9 +321,9 @@ int main(int argc, char* argv[]) {
 
     auto nodes_input = read_input_nodes(input_file);
     auto edges = read_edges(input_file);
-    std::map<std::string, OutputNode> nodes_output;
+    std::map<std::string, Node> nodes_output;
     std::string output_file;
-    Score start_score;
+    Score start_score = {0, 0, 0, 0, 0, 0};
     for (const std::string& ofile : output_files) {
         output_file = ofile;
         nodes_output = read_output_nodes(output_file);
