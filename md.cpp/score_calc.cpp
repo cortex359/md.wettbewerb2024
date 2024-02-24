@@ -30,7 +30,7 @@ std::map<std::string, Node> read_input_nodes(const std::string& file_path) {
         nodes[id] = {idx, id, value, sqrt(value), x, y};
         ++idx;
     }
-
+    file.close();
     return nodes;
 }
 
@@ -59,7 +59,7 @@ std::vector<Edge> read_edges(const std::string& file_path) {
     if (edges.empty()) {
         throw std::runtime_error("No edges found in file: " + file_path);
     }
-
+    file.close();
     return edges;
 }
 
@@ -83,7 +83,7 @@ std::map<std::string, Node> read_output_nodes(const std::string& file_path) {
         iss >> x >> y >> radius >> name >> idx;
         nodes[name] = Node({idx, name, radius*radius, radius, x, y});
     }
-
+    file.close();
     return nodes;
 }
 
