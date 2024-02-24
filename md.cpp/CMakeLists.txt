@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.27)
 project(md_cpp)
 
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-add_executable(md_cpp score_calc.cpp
-        graph_optimization.h)
+include_directories(include)
+
+add_executable(graph_optimization src/main.cpp src/graph_optimization.cpp src/utils.cpp src/perturbation.cpp)
