@@ -36,21 +36,19 @@ std::map<std::string, Node> read_input_nodes(const std::string& file_path) {
 
 std::vector<Edge> read_edges(const std::string& file_path) {
     std::vector<Edge> edges;
-    std::string line, node_0, node_1;
+    std::string line;
+    std::string node_0, node_1;
     std::ifstream file(file_path);
     if (!file) {
         throw std::runtime_error("Failed to open file: " + file_path);
     }
 
     bool skip = true;
+    // detect empty line as beginning of edges
+    while (std::getline(file, line) && !line.empty()) {
+        continue;
+    }
     while (std::getline(file, line)) {
-        if (line.empty()) {
-            skip = false;
-            continue;
-        }
-        if (skip) {
-            continue;
-        }
         std::istringstream iss(line);
         iss >> node_0 >> node_1;
         edges.push_back({node_0, node_1});
