@@ -1,35 +1,30 @@
-//
-// Created by cthelen on 23.02.24.
-// graph_optimization.h
-//
-
 #ifndef GRAPH_OPTIMIZATION_H
 #define GRAPH_OPTIMIZATION_H
 
-#include <string>
+#include<string>
 #include <vector>
 #include <map>
 #include <random>
+#include <memory>
 
 // Constant for version
 const auto VERSION = "1.0.3";
 
 // Node structure for input graph
 struct Node {
-    unsigned int idx;
-    std::string node;
-    double value;
+    const std::string node;
+    const double value;
     double radius;
     double x;
     double y;
+    //std::vector<Node*> neighbors;
 };
 
-// Edge structure for input graph
 struct Edge {
-    std::string node_0;
-    std::string node_1;
+    std::shared_ptr<Node> node_0;
+    std::shared_ptr<Node> node_1;
+    double angle = -1.0;
 };
-
 
 // Score structure for optimization results
 struct Score {
@@ -42,22 +37,18 @@ struct Score {
 };
 
 // Function declarations
-
 double calc_angle(const Node& node_a, const Node& node_b);
-double calc_angle_max(const std::map<std::string, Node>& input_nodes,
-                      const std::map<std::string, Node>& output_nodes,
-                      const std::vector<Edge>& edges);
+double find_angle_max(const std::vector<Edge>& input_edges,
+                      const std::vector<Edge>& output_edges);
 
 double calc_overlap(const Node& node_a, const Node& node_b);
-double calc_overlap_max(const std::map<std::string, Node>& output_nodes);
+double calc_overlap_max(const std::vector<Node>& nodes);
 
 double calc_distance(const Node& node_a, const Node& node_b);
-double calc_distance_max(const std::map<std::string, Node>& output_nodes,
-                         const std::vector<Edge>& edges);
+double calc_distance_max(const std::vector<Edge>& edges);
 
-Score calc_score(const std::map<std::string, Node>& input_nodes,
-                 const std::map<std::string, Node>& output_nodes,
-                 const std::vector<Edge>& edges);
-
+Score calc_score(const std::vector<Node>& output_nodes,
+                 const std::vector<Edge>& input_edges,
+                 const std::vector<Edge>& output_edges);
 
 #endif // GRAPH_OPTIMIZATION_H

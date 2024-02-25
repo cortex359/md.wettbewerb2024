@@ -1,97 +1,132 @@
-//
-// Created by cthelen on 24.02.24.
-//
-
 #include "utils.h"
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <vector>
-#include <map>
-#include <cmath>
-#include <algorithm>
-#include <iomanip>
-#include <iterator>
+#include "score.h"
 
-std::map<std::string, Node> read_input_nodes(const std::string& file_path) {
-    std::map<std::string, Node> nodes;
-    std::ifstream file(file_path);
-    std::string line, id;
-    double value, x, y;
 
-    // check if file exists
-    if (!file) {
-        throw std::runtime_error("Failed to open file: " + file_path);
-    }
+struct parsing_file_exception : public std::runtime_error {
+    using runtime_error::runtime_error;
+};
 
-    unsigned int idx = 0;
-    while (std::getline(file, line) && !line.empty()) {
-        std::istringstream iss(line);
-        iss >> id >> value >> x >> y;
-        nodes[id] = {idx, id, value, sqrt(value), x, y};
-        ++idx;
-    }
-    file.close();
-    return nodes;
-}
-
-std::vector<Edge> read_edges(const std::string& file_path) {
+std::pair<std::vector<Node>, std::vector<Edge>> read_input_file(const std::string &file_path) {
+    std::vector<Node> nodes;
     std::vector<Edge> edges;
-    std::string line;
-    std::string node_0, node_1;
+    std::vector<std::pair<std::string, std::string>> edges_str;
     std::ifstream file(file_path);
-    if (!file) {
-        throw std::runtime_error("Failed to open file: " + file_path);
+    std::string line;
+    std::string name;
+    std::string node_0;
+    std::string node_1;
+    double x;
+    double y;
+    double value;
+
+    // open file
+    if (!file.is_open() || !file.good()) {
+        std::cerr << "File " << file_path << " does not exist." << std::endl;
+        throw parsing_file_exception("Failed to open file: " + file_path);
     }
 
-    // detect empty line as beginning of edges
-    while (std::getline(file, line) && !line.empty() && line != "\r");
+    while (std::getline(file, line) && !line.empty() && line != "\r") {
+        std::istringstream iss(line);
+        iss >> name >> value >> x >> y;
+        nodes.push_back(Node({name, value, sqrt(value), x, y}));
+    }
+
     while (std::getline(file, line)) {
         std::istringstream iss(line);
         iss >> node_0 >> node_1;
-        edges.push_back({node_0, node_1});
+        edges_str.emplace_back(node_0, node_1);
     }
 
-    if (edges.empty()) {
-        throw std::runtime_error("No edges found in file: " + file_path);
-    }
     file.close();
-    return edges;
+
+    if (nodes.empty()) {
+        throw parsing_file_exception("No nodes found in file: " + file_path);
+    }
+    if (edges_str.empty()) {
+        throw parsing_file_exception("No edges found in file: " + file_path);
+    }
+
+    for (const auto &edge : edges_str) {
+        // find Node with name edge.first and edge.second
+        auto it_0 = std::find_if(nodes.begin(), nodes.end(), [&edge](const Node& node) { return node.node == edge.first; });
+        auto it_1 = std::find_if(nodes.begin(), nodes.end(), [&edge](const Node& node) { return node.node == edge.second; });
+        if (it_0 == nodes.end() || it_1 == nodes.end()) {
+            throw parsing_file_exception("Node " + edge.first + " or " + edge.second + " not found in file: " + file_path);
+        }
+
+        // and also create a List of edges for faster access
+        edges.emplace_back(Edge{std::make_shared<Node>(*it_0), std::make_shared<Node>(*it_1), calc_angle(*it_0, *it_1)});
+    }
+    std::cout << "Read " << nodes.size() << " nodes and " << edges.size() << " edges from file: " << file_path << std::endl;
+    return std::make_pair(nodes, edges);
 }
 
-std::map<std::string, Node> read_output_nodes(const std::string& file_path) {
-    std::map<std::string, Node> nodes;
-    std::string line, name;
-    double x, y, radius;
-    unsigned int idx;
+std::vector<Node> read_output_nodes(const std::string& file_path) {
+    std::vector<Node> nodes;
     std::ifstream file(file_path);
-    if (!file) {
-        throw std::runtime_error("Failed to open file: " + file_path);
+    std::string line;
+    std::string name;
+    std::string node_0;
+    std::string node_1;
+    double x;
+    double y;
+    double radius;
+    unsigned int idx_read;
+    unsigned int idx = 0;
+
+    // open file
+    if (!file.is_open() || !file.good()) {
+        std::cerr << "File " << file_path << " does not exist." << std::endl;
+        throw parsing_file_exception("Failed to open file: " + file_path);
     }
 
-    // check if file exists
-    if (!file) {
-        std::cerr << "File " << file_path << " does not exist." << std::endl;
-        return nodes;
-    }
-    while (std::getline(file, line)) {
+    while (std::getline(file, line) && !line.empty() && line != "\r") {
         std::istringstream iss(line);
-        iss >> x >> y >> radius >> name >> idx;
-        nodes[name] = Node({idx, name, radius*radius, radius, x, y});
+        iss >> x >> y >> radius >> name >> idx_read;
+        if (idx_read != idx) {
+            throw parsing_file_exception("Invalid index in file: " + file_path + " at line: " + std::to_string(idx));
+        }
+        ++idx;
+        nodes.push_back(Node({name, -1.0, radius, x, y}));
+    }
+    if (nodes.empty()) {
+        throw parsing_file_exception("No nodes found in output file: " + file_path);
     }
     file.close();
+
     return nodes;
 }
 
-void save_nodes(const std::map<std::string, Node>& nodes_output, std::string& save_file, const double & total_score) {
-    // sort nodes_output by node.second.idx
-    std::vector<Node> sorted_nodes_output;
-    for (const auto& node : nodes_output) {
-        sorted_nodes_output.push_back(node.second);
+std::vector<Edge> get_output_edges(const std::vector<Edge>& input_edges, std::vector<Node>& output_nodes) {
+    std::vector<Edge> output_edges;
+    output_edges.reserve(input_edges.size());
+    std::cout << "Max Size: "<< output_edges.max_size() << std::endl;
+
+    for (const auto& input_edge : input_edges) {
+        std::cout << "Looking for nodes " << input_edges.size() << " in output file." << std::endl;
+        if (input_edge.node_0 == nullptr || input_edge.node_1 == nullptr) {
+            throw std::runtime_error("nullptr found in input_edges");
+        }
+
+        auto node_a = input_edge.node_0->node;
+        auto node_b = input_edge.node_1->node;
+        // find output node with same name as input node
+        auto it_a = std::find_if(output_nodes.begin(), output_nodes.end(), [&node_a](const Node& node) { return node.node == node_a; });
+        auto it_b = std::find_if(output_nodes.begin(), output_nodes.end(), [&node_b](const Node& node) { return node.node == node_b; });
+
+        if (it_a == output_nodes.end() || it_b == output_nodes.end()) {
+            throw std::runtime_error("Node names in input and output files do not match.");
+        }
+
+        std::cout << "Found nodes " << it_a->node << " and " << it_b->node << " in output file." << std::endl;
+        Edge new_edge = Edge{std::make_shared<Node>(*it_a), std::make_shared<Node>(*it_b), calc_angle(*it_a, *it_b)};
+        output_edges.push_back(new_edge);
+        std::cout << "current size: " << output_edges.size() << std::endl;
     }
-    std::sort(sorted_nodes_output.begin(), sorted_nodes_output.end(), [](const Node& a, const Node& b) {
-        return a.idx < b.idx;
-    });
+    return output_edges;
+}
+
+void save_nodes(const std::vector<Node>& nodes_output, std::string& save_file, const double& total_score) {
 
     if (std::size_t pos = save_file.find("_score_"); pos != std::string::npos) {
         save_file = save_file.substr(0, pos) + "_score_" + std::to_string(total_score) + ".txt";
@@ -102,16 +137,25 @@ void save_nodes(const std::map<std::string, Node>& nodes_output, std::string& sa
 
     std::cerr << "Saving to file " << save_file << std::endl;
 
-    // check if save_file allready exists
+    // check if save_file already exists
     if (std::ifstream file(save_file); file) {
         std::cerr << "File " << save_file << " already exists." << std::endl;
-        return;
-    } else {
-        std::ofstream output_file_sorted(save_file);
-        for (const auto& node : sorted_nodes_output) {
-            output_file_sorted << std::setprecision(10) << node.x << " " << node.y << " " << std::setprecision(17) <<
-                               node.radius << " " << node.node << " " << node.idx << std::endl;
+        std::cerr << "Writing output to stdout." << std::endl << std::endl;
+
+        int idx = 0;
+        for (const auto& node : nodes_output) {
+            std::cout << std::setprecision(10) << node.x << " " << node.y << " " << std::setprecision(17) <<
+                      node.radius << " " << node.node << " " << idx << std::endl;
+            ++idx;
         }
-        output_file_sorted.close();
+    } else {
+        std::ofstream output_file(save_file);
+        int idx = 0;
+        for (const auto& node : nodes_output) {
+            output_file << std::setprecision(10) << node.x << " " << node.y << " " << std::setprecision(17) <<
+                               node.radius << " " << node.node << " " << idx << std::endl;
+            ++idx;
+        }
+        output_file.close();
     }
 }

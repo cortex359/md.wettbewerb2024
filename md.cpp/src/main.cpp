@@ -1,25 +1,32 @@
-#include "graph_optimization.h"
-#include "utils.h"
+#include "score.h"
 #include "perturbation.h"
+#include "utils.h"
 #include <iostream>
 
+void test_input_edges(const std::vector<Edge> &input_edges) {
+    for (const auto &edge: input_edges) {
+        std::cout << "Edge: " << edge.node_0->node << " " << edge.node_1->node << " " << edge.angle << std::endl;
+    }
+}
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
     // Commandline Arguments
     bool score_only = false;
     int runtime = 0; // number of seconds to run the optimization
     double max_perturbation = 0.0; // maximum perturbation for x and y coordinates
     double temperature = 0.0; // Initial temperature for simulated annealing
     double cooling_rate = 0.0; // Cooling rate for simulated annealing
-
     std::string input_file;
     std::vector<std::string> output_files;
     for (int i = 1; i < argc; ++i) {
         std::string arg = argv[i];
         if (arg == "-h" || arg == "--help") {
             std::cerr << "Usage: " << argv[0] << " [-h|--help] [-v|--version]" << std::endl;
-            std::cerr << "       " << argv[0] << " [-s|--score] input_file output_file [output_file_2, ...]" << std::endl;
-            std::cerr << "       " << argv[0] << " input_file output_file [seconds=10] [max_pertubation=0.1] [temperature=1.0] [cooling_rate=0.99]" << std::endl;
+            std::cerr << "       " << argv[0] << " [-s|--score] input_file output_file [output_file_2, ...]"
+                      << std::endl;
+            std::cerr << "       " << argv[0]
+                      << " input_file output_file [seconds=10] [max_pertubation=0.1] [temperature=1.0] [cooling_rate=0.99]"
+                      << std::endl;
             return 0;
         }
         if (arg == "-v" || arg == "--version") {
@@ -35,14 +42,14 @@ int main(int argc, char* argv[]) {
         } else if (runtime == 0) {
             try {
                 runtime = std::stoi(arg);
-            } catch (const std::invalid_argument& e) {
+            } catch (const std::invalid_argument &e) {
                 std::cerr << "Invalid argument for runtime" << std::endl;
                 return 1;
             }
         } else if (max_perturbation == 0.0) {
             try {
                 max_perturbation = std::stod(arg);
-            } catch (const std::invalid_argument& e) {
+            } catch (const std::invalid_argument &e) {
                 std::cerr << "Invalid argument for max_perturbation" << std::endl;
                 return 1;
             }
@@ -52,7 +59,7 @@ int main(int argc, char* argv[]) {
                 if (temperature <= 0.0) {
                     throw std::invalid_argument("Temperature must be greater than 0");
                 }
-            } catch (const std::invalid_argument& e) {
+            } catch (const std::invalid_argument &e) {
                 std::cerr << "Invalid argument for temperature" << std::endl;
                 return 1;
             }
@@ -62,7 +69,7 @@ int main(int argc, char* argv[]) {
                 if (cooling_rate <= 0.0 || cooling_rate >= 1.0) {
                     throw std::invalid_argument("Cooling rate must be between 0 and 1");
                 }
-            } catch (const std::invalid_argument& e) {
+            } catch (const std::invalid_argument &e) {
                 std::cerr << "Invalid argument for cooling_rate" << std::endl;
                 return 1;
             }
@@ -89,38 +96,42 @@ int main(int argc, char* argv[]) {
         cooling_rate = 0.99;
     }
 
+    auto [input_nodes, input_edges] = read_input_file(input_file);
+    test_input_edges(input_edges);
 
-    auto nodes_input = read_input_nodes(input_file);
-    auto edges = read_edges(input_file);
-    std::map<std::string, Node> nodes_output;
+    std::vector<Node> output_nodes;
+    std::vector<Edge> output_edges;
+
     std::string output_file;
     Score start_score = {0, 0, -1.0, -1.0, -1.0, -1.0};
-    for (const std::string& ofile : output_files) {
+    for (const std::string &ofile: output_files) {
         output_file = ofile;
-        nodes_output = read_output_nodes(output_file);
-        start_score = calc_score(nodes_input, nodes_output, edges);
-        std::cout << output_file << std::endl;
+        output_nodes = read_output_nodes(output_file);
+        output_edges = get_output_edges(input_edges, output_nodes);
+
+        start_score = calc_score(output_nodes, input_edges, output_edges);
+
         std::cout << "Score:       " << start_score.total_score << " (Overlap: " << start_score.overlap << ", Distance "
-                  << start_score.distance << ", Angle: " << start_score.angle << ")" << std::endl;
+                  << start_score.distance << ", Angle: " << start_score.angle << ", n: " << start_score.n << ", k: "
+                  << start_score.k << ") \t" << output_file << std::endl;
     }
 
-    start_score = calc_score(nodes_input, nodes_output, edges);
     if (score_only) return 0;
 
     auto time_global_start = std::chrono::high_resolution_clock::now();
 
     // Optimize the positions of the nodes
-    const auto iterations = optimize_positions(nodes_input, nodes_output, edges, runtime, temperature, cooling_rate, max_perturbation);
+    const auto iterations = optimize_positions(input_edges, output_nodes, output_edges, runtime, temperature, cooling_rate, max_perturbation);
 
     // Calculate score
-    Score case_score = calc_score(nodes_input, nodes_output, edges);
+    Score case_score = calc_score(output_nodes, input_edges, output_edges);
     std::cout << "Final Score: " << case_score.total_score << " (Overlap: " << case_score.overlap << ", Distance " <<
               case_score.distance << ", Angle: " << case_score.angle << ")" << std::endl;
 
     if (start_score.total_score < std::floor(case_score.total_score)) {
         std::cout << "Score improved by " << case_score.total_score - start_score.total_score << std::endl;
         std::cout << "Saving output to file" << std::endl;
-        save_nodes(nodes_output, output_file, case_score.total_score);
+        save_nodes(output_nodes, output_file, case_score.total_score);
     } else {
         std::cout << "Score did not improve" << std::endl;
     }
@@ -138,7 +149,8 @@ int main(int argc, char* argv[]) {
         std::cout << "Total Time: " << total_elapsed.count() << " ms" << std::endl;
     }
     std::cout << "Iterations: " << iterations << std::endl;
-    std::cout << "Time per 1000 iterations: " << (total_elapsed_ns.count() / static_cast<double>(iterations) / 1000) << " µs/iterations" << std::endl;
+    std::cout << "Time per 1000 iterations: " << (total_elapsed_ns.count() / static_cast<double>(iterations) / 1000)
+              << " µs/iterations" << std::endl;
 
     return 0;
 }

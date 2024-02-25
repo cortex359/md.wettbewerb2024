@@ -1,30 +1,20 @@
-//
-// Created by cthelen on 24.02.24.
-//
+#ifndef PERTURBATION_H
+#define PERTURBATION_H
 
-#ifndef PERTUBATION_H
-#define PERTUBATION_H
-
-#include "graph_optimization.h"
-#include <iostream>
-#include <fstream>
-#include <sstream>
+#include "score.h"
 #include <vector>
-#include <map>
 #include <cmath>
-#include <chrono>
-#include <algorithm>
-#include <iomanip>
-#include <iterator>
 #include <random>
+#include <chrono>
 
 double perturb(double coordinate, double max_perturbation, std::mt19937& rng, std::uniform_real_distribution<>& dist);
-unsigned long int optimize_positions(const std::map<std::string, Node>& input_nodes,
-                        std::map<std::string, Node>& output_nodes,
-                        const std::vector<Edge>& edges,
-                        int iterations,
-                        double temperature,
-                        double cooling_rate,
-                        double max_perturbation);
+unsigned long int optimize_positions(const std::vector<Edge>& input_edges,
+                                     std::vector<Node>& output_nodes,
+                                     std::vector<Edge>& output_edges,
+                                     int runtime,
+                                     double temperature,
+                                     double cooling_rate,
+                                     double max_perturbation);
+void update_angles(std::vector<Edge>& output_edges);
 
-#endif //PERTUBATION_H
+#endif //PERTURBATION_H
