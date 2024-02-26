@@ -19,7 +19,7 @@ unsigned long int optimize_positions(
     std::uniform_real_distribution dist(-1.0, 1.0);
 
     const auto start_time{std::chrono::steady_clock::now()};
-    double current_score = calc_score(output_nodes, input_edges, output_edges).total_score;
+    double current_score = get_total_score(output_nodes, input_edges, output_edges);
 
     unsigned long int iterations = 0;
     while (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - start_time).count() < runtime) {
@@ -28,25 +28,24 @@ unsigned long int optimize_positions(
             // Save the current position
             double original_x = node.x;
             double original_y = node.y;
-            auto original_output_edges = output_edges;
 
             // Perturb the position
             node.x = perturb(node.x, max_perturbation, rng, dist);
             node.y = perturb(node.y, max_perturbation, rng, dist);
 
             // Update the edges
-            update_angles(output_edges);
+            const std::vector<Edge> updated_edges = update_angles(output_edges);
 
             // Calculate the score with the new position
-            double new_score = calc_score(output_nodes, input_edges, output_edges).total_score;
+            double new_score = get_total_score(output_nodes, input_edges, updated_edges);
 
             // Revert if the new score is worse, considering the temperature for simulated annealing
             if (new_score < current_score && exp((new_score - current_score) / temperature) < dist(rng)) {
                 node.x = original_x;
                 node.y = original_y;
-                output_edges = original_output_edges;
             } else {
                 current_score = new_score; // Update current score
+                output_edges = updated_edges; // Update the edges
             }
         }
         ++iterations;
@@ -57,8 +56,10 @@ unsigned long int optimize_positions(
     return iterations;
 }
 
-void update_angles(std::vector<Edge>& output_edges) {
-    for (auto& edge : output_edges) {
+std::vector<Edge> update_angles(const std::vector<Edge>& output_edges) {
+    auto updated_edges = output_edges;
+    for (auto& edge : updated_edges) {
         edge.angle = calc_angle(*edge.node_0, *edge.node_1);
     }
+    return updated_edges;
 }

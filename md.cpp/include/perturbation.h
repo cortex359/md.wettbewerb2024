@@ -15,6 +15,6 @@ unsigned long int optimize_positions(const std::vector<Edge>& input_edges,
                                      double temperature,
                                      double cooling_rate,
                                      double max_perturbation);
-void update_angles(std::vector<Edge>& output_edges);
+std::vector<Edge> update_angles(const std::vector<Edge>& output_edges);
 
 #endif //PERTURBATION_H

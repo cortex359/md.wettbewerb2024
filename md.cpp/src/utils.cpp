@@ -2,6 +2,7 @@
 #include "score.h"
 
 
+#define verbose false
 struct parsing_file_exception : public std::runtime_error {
     using runtime_error::runtime_error;
 };
@@ -55,7 +56,9 @@ std::pair<std::vector<Node>, std::vector<Edge>> read_input_file(const std::strin
         }
 
         // and also create a List of edges for faster access
-        edges.emplace_back(Edge{std::make_shared<Node>(*it_0), std::make_shared<Node>(*it_1), calc_angle(*it_0, *it_1)});
+        auto node_a = std::make_shared<Node>(*it_0);
+        auto node_b = std::make_shared<Node>(*it_1);
+        edges.emplace_back(Edge{node_a, node_b, calc_angle(*node_a, *node_b)});
     }
     std::cout << "Read " << nodes.size() << " nodes and " << edges.size() << " edges from file: " << file_path << std::endl;
     return std::make_pair(nodes, edges);
@@ -100,16 +103,17 @@ std::vector<Node> read_output_nodes(const std::string& file_path) {
 std::vector<Edge> get_output_edges(const std::vector<Edge>& input_edges, std::vector<Node>& output_nodes) {
     std::vector<Edge> output_edges;
     output_edges.reserve(input_edges.size());
-    std::cout << "Max Size: "<< output_edges.max_size() << std::endl;
 
     for (const auto& input_edge : input_edges) {
-        std::cout << "Looking for nodes " << input_edges.size() << " in output file." << std::endl;
+        if (verbose) std::cout << "Looking for nodes " << input_edges.size() << " in output file." << std::endl;
+
         if (input_edge.node_0 == nullptr || input_edge.node_1 == nullptr) {
             throw std::runtime_error("nullptr found in input_edges");
         }
 
         auto node_a = input_edge.node_0->node;
         auto node_b = input_edge.node_1->node;
+
         // find output node with same name as input node
         auto it_a = std::find_if(output_nodes.begin(), output_nodes.end(), [&node_a](const Node& node) { return node.node == node_a; });
         auto it_b = std::find_if(output_nodes.begin(), output_nodes.end(), [&node_b](const Node& node) { return node.node == node_b; });
@@ -118,15 +122,16 @@ std::vector<Edge> get_output_edges(const std::vector<Edge>& input_edges, std::ve
             throw std::runtime_error("Node names in input and output files do not match.");
         }
 
-        std::cout << "Found nodes " << it_a->node << " and " << it_b->node << " in output file." << std::endl;
-        Edge new_edge = Edge{std::make_shared<Node>(*it_a), std::make_shared<Node>(*it_b), calc_angle(*it_a, *it_b)};
+        if (verbose) std::cout << "Found nodes " << it_a->node << " and " << it_b->node << " in output file." << std::endl;
+        auto node_0 = std::make_shared<Node>(*it_a);
+        auto node_1 = std::make_shared<Node>(*it_b);
+        Edge new_edge = Edge{node_0, node_1, calc_angle(*node_0, *node_1)};
         output_edges.push_back(new_edge);
-        std::cout << "current size: " << output_edges.size() << std::endl;
     }
     return output_edges;
 }
 
-void save_nodes(const std::vector<Node>& nodes_output, std::string& save_file, const double& total_score) {
+void save_nodes(const std::vector<Node>& nodes_output, std::string& save_file, const double& total_score, const bool dry_run) {
 
     if (std::size_t pos = save_file.find("_score_"); pos != std::string::npos) {
         save_file = save_file.substr(0, pos) + "_score_" + std::to_string(total_score) + ".txt";
@@ -135,12 +140,14 @@ void save_nodes(const std::vector<Node>& nodes_output, std::string& save_file, c
         save_file = save_file.substr(0, pos) + "_score_" + std::to_string(total_score) + ".txt";
     }
 
-    std::cerr << "Saving to file " << save_file << std::endl;
-
     // check if save_file already exists
-    if (std::ifstream file(save_file); file) {
-        std::cerr << "File " << save_file << " already exists." << std::endl;
-        std::cerr << "Writing output to stdout." << std::endl << std::endl;
+    if (std::ifstream file(save_file); file || dry_run) {
+        if (dry_run) {
+            std::cout << "Dry run, no output saved." << std::endl;
+        } else {
+            std::cerr << "File " << save_file << " already exists." << std::endl;
+        }
+        std::cerr << "Writing output to stdout:" << std::endl << std::endl;
 
         int idx = 0;
         for (const auto& node : nodes_output) {
@@ -149,6 +156,7 @@ void save_nodes(const std::vector<Node>& nodes_output, std::string& save_file, c
             ++idx;
         }
     } else {
+        std::cout << "Saving to file " << save_file << std::endl;
         std::ofstream output_file(save_file);
         int idx = 0;
         for (const auto& node : nodes_output) {

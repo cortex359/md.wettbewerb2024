@@ -44,7 +44,7 @@ double find_angle_max(const std::vector<Edge>& input_edges,
 double calc_overlap(const Node& node_a, const Node& node_b);
 double calc_overlap_max(const std::vector<Node>& nodes);
 
-double calc_distance(const Node& node_a, const Node& node_b);
+double calc_distance(const std::shared_ptr<Node>& node_a, const std::shared_ptr<Node>& node_b);
 double calc_distance_max(const std::vector<Edge>& edges);
 
 Score calc_score(const std::vector<Node>& output_nodes,

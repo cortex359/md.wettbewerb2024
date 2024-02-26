@@ -9,9 +9,12 @@ void test_input_edges(const std::vector<Edge> &input_edges) {
     }
 }
 
+auto const verbose = false;
+
 int main(int argc, char *argv[]) {
     // Commandline Arguments
     bool score_only = false;
+    bool dry_run = false;
     int runtime = 0; // number of seconds to run the optimization
     double max_perturbation = 0.0; // maximum perturbation for x and y coordinates
     double temperature = 0.0; // Initial temperature for simulated annealing
@@ -33,7 +36,9 @@ int main(int argc, char *argv[]) {
             std::cout << "Version " << VERSION << std::endl;
             return 0;
         }
-        if (arg == "-s" || arg == "--score") {
+        if (arg == "-n" || arg == "--dry-run") {
+            dry_run = true;
+        } else if (arg == "-s" || arg == "--score") {
             score_only = true;
         } else if (input_file.empty()) {
             input_file = arg;
@@ -97,7 +102,7 @@ int main(int argc, char *argv[]) {
     }
 
     auto [input_nodes, input_edges] = read_input_file(input_file);
-    test_input_edges(input_edges);
+    if (verbose) test_input_edges(input_edges);
 
     std::vector<Node> output_nodes;
     std::vector<Edge> output_edges;
@@ -130,8 +135,7 @@ int main(int argc, char *argv[]) {
 
     if (start_score.total_score < std::floor(case_score.total_score)) {
         std::cout << "Score improved by " << case_score.total_score - start_score.total_score << std::endl;
-        std::cout << "Saving output to file" << std::endl;
-        save_nodes(output_nodes, output_file, case_score.total_score);
+        save_nodes(output_nodes, output_file, case_score.total_score, dry_run);
     } else {
         std::cout << "Score did not improve" << std::endl;
     }
