@@ -99,7 +99,7 @@ def refresh_scores(last_modified_time: datetime):
         mail_subject = f'🏆 {ranking[0].name} mit {ranking[0].score + ranking[0].bonus:,d} 🌟!'
     mail_subject = mail_subject.replace(",", ".")
 
-    if mail_subject != "":
+    if send_mail:
         print(f'{Fore.GREEN}[MAIL] Sending mail with Subject "{mail_subject}".{Style.RESET_ALL}')
         send_notification(mail_subject, prepare_mail.replace(",", "."))
 
