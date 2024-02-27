@@ -1,7 +1,7 @@
 import pandas as pd
 
 
-def read_to_df(file_path: str) -> (pd.DataFrame, pd.DataFrame):
+def read_to_df(file_path: str) -> (pd.DataFrame, pd.DataFrame, int):
     """
     This function takes a file path as input and returns a tuple of a pandas DataFrame and a list of tuples.
 
@@ -29,10 +29,20 @@ def read_to_df(file_path: str) -> (pd.DataFrame, pd.DataFrame):
 
     # edges_raw → edges_list → edges_df
     edges_list = [tuple(line.split()) for line in edges_raw.split('\n')]
+    # k muss vor dem Entfernen von Duplikaten gespeichert werden
+    k: int = len(edges_list)
+    edges_list = remove_edge_duplicates(edges_list)
     edges_df = pd.DataFrame(edges_list, columns=['node_0', 'node_1'])
 
-    return nodes_df, edges_df
+    return nodes_df, edges_df, k
 
+
+def remove_edge_duplicates(edges: list[tuple]) -> list[tuple]:
+    for a, b in edges:
+        reverse = (b, a)
+        if edges.count(reverse) > 0:
+            edges.remove(reverse)
+    return edges
 
 def read_to_lists(file_path: str) -> (dict[str, tuple[float, float, float]], list[tuple[str, str]]):
     """
@@ -57,5 +67,5 @@ def read_to_lists(file_path: str) -> (dict[str, tuple[float, float, float]], lis
 
     # edges_raw → edges_list
     edges_list = [tuple(line.split()) for line in edges_raw.split('\n')]
-
+    edges_list = remove_edge_duplicates(edges_list)
     return nodes_dict, edges_list

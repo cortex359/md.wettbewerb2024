@@ -66,6 +66,7 @@ def refresh_scores(last_modified_time: datetime):
     mail_subject = ""
     prepare_mail = "Scores from " + last_modified_time.strftime('%Y-%m-%d %H:%M:%S') + ":\n\n"
     tetris_updated = False
+    send_mail = False
     for team in ranking:
         last_score_date, last_score, last_bonus = get_last_score(score_log, team)
 
@@ -73,8 +74,10 @@ def refresh_scores(last_modified_time: datetime):
             append_score_log(team, last_modified_time)
             if last_score == 0:
                 print(f'{Fore.GREEN}[SCORE] Team {Style.BRIGHT}{team.name}{Style.NORMAL} hinzugefügt mit score {team.score} (+{team.bonus})!{Style.RESET_ALL}')
+                send_mail = True
             elif last_score < team.score or last_bonus < team.bonus:
                 print(f'{Fore.GREEN}[SCORE] {team.name} {last_score}+{last_bonus} -> {team.score}+{team.bonus} :: total score ↑ {team.score + team.bonus - last_score - last_bonus}{Style.RESET_ALL}')
+                send_mail = True
             elif last_score > team.score:
                 print(f'{Fore.RED}[SCORE] {team.name} {last_score}+{last_bonus} -> {team.score}+{team.bonus} :: score ↓ {team.score + team.bonus - last_score - last_bonus}{Style.RESET_ALL}')
 
@@ -89,11 +92,12 @@ def refresh_scores(last_modified_time: datetime):
         else:
             prepare_mail = f"{prepare_mail}{team.name:>18s}: {team.score + team.bonus:9,d}\n"
 
-    if ranking[0].name != "tau":
-        mail_subject = f'1st place {ranking[0].name} with {ranking[0].score + ranking[0].bonus}!'
-    elif tetris_updated:
-        mail_subject = f'Tetris new score {teams["tetris-for-the-win"].score + teams["tetris-for-the-win"].bonus:,d}!'
-        mail_subject = mail_subject.replace(",", ".")
+    mail_subject = f'🥇 {ranking[0].name} mit {ranking[0].score + ranking[0].bonus:,d} 🌟'
+    if tetris_updated:
+        mail_subject = f'😹 Tetris new score is {teams["tetris-for-the-win"].score + teams["tetris-for-the-win"].bonus:,d} 🌟, lol 🙀'
+    if ranking[0].name == "tau":
+        mail_subject = f'🏆 {ranking[0].name} mit {ranking[0].score + ranking[0].bonus:,d} 🌟!'
+    mail_subject = mail_subject.replace(",", ".")
 
     if mail_subject != "":
         print(f'{Fore.GREEN}[MAIL] Sending mail with Subject "{mail_subject}".{Style.RESET_ALL}')

@@ -2,7 +2,7 @@ import pandas as pd
 import math
 import numpy as np
 import itertools
-
+from utils import input
 
 def read_to_df(file_path: str) -> pd.DataFrame:
     """
@@ -79,15 +79,44 @@ def calc_overlap_fast(df):
 
 
 def calc_distance_max(df, edges):
-    return max([calc_distance(df, node_a, node_b) for node_a, node_b in itertools.combinations(df.index, 2) if
-                (node_a, node_b) in edges or (node_b, node_a) in edges])
+    return max([calc_distance(df, node_a, node_b) for node_a, node_b in itertools.combinations(df.index, 2)
+                if (node_a, node_b) in edges or (node_b, node_a) in edges])
 
 
-def calc_score(input_nodes, output_nodes, edges):
+def calc_score(input_nodes, output_nodes, edges, k):
     n = input_nodes.shape[0]
-    k = len(edges)
     overlap = calc_overlap_fast(output_nodes) * 100
     distance = calc_distance_max(output_nodes, edges) * 100
     angle = calc_angle_max(input_nodes, output_nodes, edges) * 100
     total_score = 1000 * (n + k) / (1 + 2 * overlap + distance + 0.1 * angle)
-    return n, k, overlap, distance, angle, total_score
+    return n, overlap, distance, angle, total_score
+
+
+def calc_score_with_np(input_nodes, output_nodes, edges, k):
+
+    # liste mit allen Node Kombinationen \subset Nodes^2
+
+    # für Distance und Angel erweitern wir die Matrix um die Spalten
+    np.hypot(node_a.x - node_b.x, node_a.y - node_b.y)
+    edges['distance'] = edges.apply(lambda x: calc_distance(output_nodes, x.node_0, x.node_1), axis=1)
+    edges['target_angle'] = edges.apply(lambda x: calc_angle(input_nodes, x.node_0, x.node_1), axis=1)
+    edges['R'] = edges.apply(lambda x: input_nodes.loc[x.node_0].radius + input_nodes.loc[x.node_1].radius, axis=1)
+
+    edges['angle'] = edges['target_angle']
+    edges['angle_diff'] = edges.apply(lambda x: min(abs(x.target_angle - calc_angle(output_nodes, x.node_0, x.node_1)),
+                                              2 - abs(x.target_angle - calc_angle(output_nodes, x.node_0, x.node_1))), axis=1)
+
+
+def score_files(input_file, output_file):
+    nodes_input, edges, k = input.read_to_df(input_file)
+    edges = list(zip(edges.node_0.to_list(), edges.node_1.to_list()))
+    nodes_output = read_to_df(output_file)
+    nodes_output.set_index("node", inplace=True)
+
+    n, overlap, distance, angle, total_score = calc_score(nodes_input, nodes_output, edges, k)
+    print(f"{input_file.split('/')[-1][:-4]}")
+
+    print(
+        f"Score: {total_score:.2f} (n={n}, k={k}, overlap={overlap:.2f}, distance={distance:.2f}, angle={angle:.2f})\n")
+
+    return total_score

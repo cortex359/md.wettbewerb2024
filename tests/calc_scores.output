@@ -1,0 +1,38 @@
+Area_Afro-Eurasia
+Score: 4389.88 (n=133, k=554, overlap=77.38, distance=0.00, angle=7.33)
+
+Area_Americas
+Score: 3325.03 (n=23, k=74, overlap=0.00, distance=26.98, angle=11.90)
+
+Area_Asia
+Score: 3616.06 (n=43, k=156, overlap=8.06, distance=36.22, angle=16.99)
+
+Area_Europe
+Score: 3862.72 (n=24, k=94, overlap=7.65, distance=12.24, angle=20.06)
+
+CO2_Production_Afro-Eurasia
+Score: 3349.92 (n=127, k=538, overlap=98.42, distance=0.00, angle=6.69)
+
+Deutschlands_Nachbarn
+Score: 3200.35 (n=10, k=17, overlap=0.52, distance=4.01, angle=23.97)
+
+GNI_per_capita_Afro-Eurasia
+Score: 3352.22 (n=126, k=534, overlap=97.71, distance=0.00, angle=4.74)
+
+Instant_Noodle_Consumption_Eurasia
+Score: 2851.76 (n=27, k=72, overlap=0.72, distance=30.33, angle=19.36)
+
+Population_Afro-Eurasia
+Score: 3612.68 (n=133, k=554, overlap=94.10, distance=0.00, angle=9.56)
+
+Population_Americas
+Score: 4476.64 (n=23, k=74, overlap=0.31, distance=18.62, angle=14.23)
+
+Population_Density_Afro-Eurasia
+Score: 3418.66 (n=133, k=554, overlap=99.98, distance=0.00, angle=0.00)
+
+Population_Density_Americas
+Score: 1178.44 (n=23, k=74, overlap=39.74, distance=0.01, angle=18.30)
+
+Total Time: 2366.255878 ms
+Total Score: 40634.35
