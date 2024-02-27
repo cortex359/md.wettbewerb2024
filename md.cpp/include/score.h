@@ -26,6 +26,12 @@ struct Edge {
     double angle = -1.0;
 };
 
+struct Edge_new {
+    unsigned int node_0;
+    unsigned int node_1;
+    double angle = -1.0;
+};
+
 // Score structure for optimization results
 struct Score {
     unsigned int n;
@@ -46,9 +52,17 @@ double calc_overlap_max(const std::vector<Node>& nodes);
 
 double calc_distance(const std::shared_ptr<Node>& node_a, const std::shared_ptr<Node>& node_b);
 double calc_distance_max(const std::vector<Edge>& edges);
+double calc_distance_max(const std::vector<Edge_new>& edges, const std::vector<std::shared_ptr<Node>>& nodes);
 
 Score calc_score(const std::vector<Node>& output_nodes,
                  const std::vector<Edge>& input_edges,
                  const std::vector<Edge>& output_edges);
+
+Score calc_score(const std::vector<std::shared_ptr<Node>>& output_nodes,
+                 const std::vector<Edge_new>& input_edges,
+                 const std::vector<Edge_new>& output_edges);
+double find_angle_max(const std::vector<Edge_new>& input_edges,
+                      const std::vector<Edge_new>& output_edges);
+double calc_overlap_max(const std::vector<std::shared_ptr<Node>>& nodes);
 
 #endif // GRAPH_OPTIMIZATION_H

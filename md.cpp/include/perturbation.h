@@ -8,13 +8,14 @@
 #include <chrono>
 
 double perturb(double coordinate, double max_perturbation, std::mt19937& rng, std::uniform_real_distribution<>& dist);
-unsigned long int optimize_positions(const std::vector<Edge>& input_edges,
-                                     std::vector<Node>& output_nodes,
-                                     std::vector<Edge>& output_edges,
+unsigned long int optimize_positions(                        const std::vector<Edge_new>& input_edges,
+                                     std::vector<std::shared_ptr<Node>>& output_nodes,
+                                     std::vector<Edge_new>& output_edges,
                                      int runtime,
                                      double temperature,
                                      double cooling_rate,
                                      double max_perturbation);
 std::vector<Edge> update_angles(const std::vector<Edge>& output_edges);
+std::vector<Edge_new> update_angles(const std::vector<Edge_new>& output_edges, const std::vector<std::shared_ptr<Node>>& nodes);
 
 #endif //PERTURBATION_H

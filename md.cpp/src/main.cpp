@@ -3,9 +3,9 @@
 #include "utils.h"
 #include <iostream>
 
-void test_input_edges(const std::vector<Edge> &input_edges) {
+void test_input_edges(const std::vector<Edge_new> &input_edges, const std::vector<std::shared_ptr<Node>> &input_nodes) {
     for (const auto &edge: input_edges) {
-        std::cout << "Edge: " << edge.node_0->node << " " << edge.node_1->node << " " << edge.angle << std::endl;
+        std::cout << "Edge: " << input_nodes[edge.node_0]->node << " " << input_nodes[edge.node_1]->node << " " << edge.angle << std::endl;
     }
 }
 
@@ -102,10 +102,10 @@ int main(int argc, char *argv[]) {
     }
 
     auto [input_nodes, input_edges] = read_input_file(input_file);
-    if (verbose) test_input_edges(input_edges);
+    if (verbose) test_input_edges(input_edges, input_nodes);
 
-    std::vector<Node> output_nodes;
-    std::vector<Edge> output_edges;
+    std::vector<std::shared_ptr<Node>> output_nodes;
+    std::vector<Edge_new> output_edges;
 
     std::string output_file;
     Score start_score = {0, 0, -1.0, -1.0, -1.0, -1.0};

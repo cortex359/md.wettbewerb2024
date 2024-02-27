@@ -7,9 +7,9 @@ struct parsing_file_exception : public std::runtime_error {
     using runtime_error::runtime_error;
 };
 
-std::pair<std::vector<Node>, std::vector<Edge>> read_input_file(const std::string &file_path) {
-    std::vector<Node> nodes;
-    std::vector<Edge> edges;
+std::pair<std::vector<std::shared_ptr<Node>>, std::vector<Edge_new>> read_input_file(const std::string &file_path) {
+    std::vector<std::shared_ptr<Node>> nodes;
+    std::vector<Edge_new> edges_new;
     std::vector<std::pair<std::string, std::string>> edges_str;
     std::ifstream file(file_path);
     std::string line;
@@ -29,7 +29,7 @@ std::pair<std::vector<Node>, std::vector<Edge>> read_input_file(const std::strin
     while (std::getline(file, line) && !line.empty() && line != "\r") {
         std::istringstream iss(line);
         iss >> name >> value >> x >> y;
-        nodes.push_back(Node({name, value, sqrt(value), x, y}));
+        nodes.push_back(std::make_shared<Node>(Node({name, value, sqrt(value), x, y})));
     }
 
     while (std::getline(file, line)) {
@@ -49,23 +49,28 @@ std::pair<std::vector<Node>, std::vector<Edge>> read_input_file(const std::strin
 
     for (const auto &edge : edges_str) {
         // find Node with name edge.first and edge.second
-        auto it_0 = std::find_if(nodes.begin(), nodes.end(), [&edge](const Node& node) { return node.node == edge.first; });
-        auto it_1 = std::find_if(nodes.begin(), nodes.end(), [&edge](const Node& node) { return node.node == edge.second; });
+        auto it_0 = std::find_if(nodes.begin(), nodes.end(), [&edge](const std::shared_ptr<Node>& node) { return node->node == edge.first; });
+        auto it_1 = std::find_if(nodes.begin(), nodes.end(), [&edge](const std::shared_ptr<Node>& node) { return node->node == edge.second; });
         if (it_0 == nodes.end() || it_1 == nodes.end()) {
             throw parsing_file_exception("Node " + edge.first + " or " + edge.second + " not found in file: " + file_path);
         }
 
+        // find index of node in node vecotr
+        auto idx_0 = static_cast<unsigned int>(std::distance(nodes.begin(), it_0));
+        auto idx_1 = static_cast<unsigned int>(std::distance(nodes.begin(), it_1));
+        if (verbose) std::cout << "Edge from idx " << idx_0 << " to " << idx_1 << std::endl;
+
         // and also create a List of edges for faster access
-        auto node_a = std::make_shared<Node>(*it_0);
-        auto node_b = std::make_shared<Node>(*it_1);
-        edges.emplace_back(Edge{node_a, node_b, calc_angle(*node_a, *node_b)});
+        auto node_a = *it_0;
+        auto node_b = *it_1;
+        edges_new.emplace_back(Edge_new{idx_0, idx_1, calc_angle(*node_a, *node_b)});
     }
-    std::cout << "Read " << nodes.size() << " nodes and " << edges.size() << " edges from file: " << file_path << std::endl;
-    return std::make_pair(nodes, edges);
+    std::cout << "Read " << nodes.size() << " nodes and " << edges_new.size() << " edges from file: " << file_path << std::endl;
+    return std::make_pair(nodes, edges_new);
 }
 
-std::vector<Node> read_output_nodes(const std::string& file_path) {
-    std::vector<Node> nodes;
+std::vector<std::shared_ptr<Node>> read_output_nodes(const std::string& file_path) {
+    std::vector<std::shared_ptr<Node>> nodes;
     std::ifstream file(file_path);
     std::string line;
     std::string name;
@@ -90,7 +95,7 @@ std::vector<Node> read_output_nodes(const std::string& file_path) {
             throw parsing_file_exception("Invalid index in file: " + file_path + " at line: " + std::to_string(idx));
         }
         ++idx;
-        nodes.push_back(Node({name, -1.0, radius, x, y}));
+        nodes.push_back(std::make_shared<Node>(Node({name, -1.0, radius, x, y})));
     }
     if (nodes.empty()) {
         throw parsing_file_exception("No nodes found in output file: " + file_path);
@@ -131,7 +136,21 @@ std::vector<Edge> get_output_edges(const std::vector<Edge>& input_edges, std::ve
     return output_edges;
 }
 
-void save_nodes(const std::vector<Node>& nodes_output, std::string& save_file, const double& total_score, const bool dry_run) {
+std::vector<Edge_new> get_output_edges(const std::vector<Edge_new>& input_edges, const std::vector<std::shared_ptr<Node>>& output_nodes) {
+    std::vector<Edge_new> output_edges;
+    output_edges.reserve(input_edges.size());
+
+    for (const auto& input_edge : input_edges) {
+        if (verbose) std::cout << "Looking for nodes " << input_edges.size() << " in output file." << std::endl;
+
+        auto new_edge = Edge_new{input_edge.node_0, input_edge.node_1, calc_angle(*output_nodes[input_edge.node_0], *output_nodes[input_edge.node_1])};
+        output_edges.push_back(new_edge);
+    }
+    return output_edges;
+}
+
+
+void save_nodes(const std::vector<std::shared_ptr<Node>>& nodes_output, std::string& save_file, const double& total_score, const bool dry_run) {
 
     if (std::size_t pos = save_file.find("_score_"); pos != std::string::npos) {
         save_file = save_file.substr(0, pos) + "_score_" + std::to_string(total_score) + ".txt";
@@ -151,8 +170,8 @@ void save_nodes(const std::vector<Node>& nodes_output, std::string& save_file, c
 
         int idx = 0;
         for (const auto& node : nodes_output) {
-            std::cout << std::setprecision(10) << node.x << " " << node.y << " " << std::setprecision(17) <<
-                      node.radius << " " << node.node << " " << idx << std::endl;
+            std::cout << std::setprecision(10) << node->x << " " << node->y << " " << std::setprecision(17) <<
+                      node->radius << " " << node->node << " " << idx << std::endl;
             ++idx;
         }
     } else {
@@ -160,8 +179,8 @@ void save_nodes(const std::vector<Node>& nodes_output, std::string& save_file, c
         std::ofstream output_file(save_file);
         int idx = 0;
         for (const auto& node : nodes_output) {
-            output_file << std::setprecision(10) << node.x << " " << node.y << " " << std::setprecision(17) <<
-                               node.radius << " " << node.node << " " << idx << std::endl;
+            output_file << std::setprecision(10) << node->x << " " << node->y << " " << std::setprecision(17) <<
+                        node->radius << " " << node->node << " " << idx << std::endl;
             ++idx;
         }
         output_file.close();
