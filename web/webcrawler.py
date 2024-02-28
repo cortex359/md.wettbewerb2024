@@ -92,11 +92,11 @@ def refresh_scores(last_modified_time: datetime):
         else:
             prepare_mail = f"{prepare_mail}{team.name:>18s}: {team.score + team.bonus:9,d}\n"
 
-    mail_subject = f'🥇 {ranking[0].name} mit {ranking[0].score + ranking[0].bonus:,d} 🌟'
+    mail_subject = f'Platz 1: {ranking[0].name} mit {ranking[0].score + ranking[0].bonus:,d} Punkten'
     if tetris_updated:
-        mail_subject = f'😹 Tetris new score is {teams["tetris-for-the-win"].score + teams["tetris-for-the-win"].bonus:,d} 🌟, lol 🙀'
+        mail_subject = f'Tetris neuer Score ist {teams["tetris-for-the-win"].score + teams["tetris-for-the-win"].bonus:,d}, lol.'
     if ranking[0].name == "tau":
-        mail_subject = f'🏆 {ranking[0].name} mit {ranking[0].score + ranking[0].bonus:,d} 🌟!'
+        mail_subject = f'Platz 1: {ranking[0].name} mit {ranking[0].score + ranking[0].bonus:,d} Punkten. =D'
     mail_subject = mail_subject.replace(",", ".")
 
     if send_mail:

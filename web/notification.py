@@ -14,4 +14,4 @@ def send_notification(subject: str, text: str):
     context = ssl.create_default_context()
     with smtplib.SMTP(smtp_server, port) as server:
         server.starttls(context=context)
-        server.sendmail(sender_email, receiver_email, message.encode("utf-8"))
+        server.sendmail(sender_email, receiver_email, message)
