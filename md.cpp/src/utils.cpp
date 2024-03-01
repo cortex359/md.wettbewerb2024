@@ -7,9 +7,9 @@ struct parsing_file_exception : public std::runtime_error {
     using runtime_error::runtime_error;
 };
 
-std::pair<std::vector<std::shared_ptr<Node>>, std::vector<Edge_new>> read_input_file(const std::string &file_path) {
+std::pair<std::vector<std::shared_ptr<Node>>, std::vector<Edge>> read_input_file(const std::string &file_path) {
     std::vector<std::shared_ptr<Node>> nodes;
-    std::vector<Edge_new> edges_new;
+    std::vector<Edge> edges_new;
     std::vector<std::pair<std::string, std::string>> edges_str;
     std::ifstream file(file_path);
     std::string line;
@@ -63,9 +63,9 @@ std::pair<std::vector<std::shared_ptr<Node>>, std::vector<Edge_new>> read_input_
         // and also create a List of edges for faster access
         auto node_a = *it_0;
         auto node_b = *it_1;
-        edges_new.emplace_back(Edge_new{idx_0, idx_1, calc_angle(*node_a, *node_b)});
+        edges_new.emplace_back(Edge{idx_0, idx_1, calc_angle(*node_a, *node_b)});
     }
-    std::cout << "Read " << nodes.size() << " nodes and " << edges_new.size() << " edges from file: " << file_path << std::endl;
+    if (verbose) std::cout << "Read " << nodes.size() << " nodes and " << edges_new.size() << " edges from file: " << file_path << std::endl;
     return std::make_pair(nodes, edges_new);
 }
 
@@ -105,52 +105,21 @@ std::vector<std::shared_ptr<Node>> read_output_nodes(const std::string& file_pat
     return nodes;
 }
 
-std::vector<Edge> get_output_edges(const std::vector<Edge>& input_edges, std::vector<Node>& output_nodes) {
+std::vector<Edge> get_output_edges(const std::vector<Edge>& input_edges, const std::vector<std::shared_ptr<Node>>& output_nodes) {
     std::vector<Edge> output_edges;
     output_edges.reserve(input_edges.size());
 
     for (const auto& input_edge : input_edges) {
         if (verbose) std::cout << "Looking for nodes " << input_edges.size() << " in output file." << std::endl;
 
-        if (input_edge.node_0 == nullptr || input_edge.node_1 == nullptr) {
-            throw std::runtime_error("nullptr found in input_edges");
-        }
-
-        auto node_a = input_edge.node_0->node;
-        auto node_b = input_edge.node_1->node;
-
-        // find output node with same name as input node
-        auto it_a = std::find_if(output_nodes.begin(), output_nodes.end(), [&node_a](const Node& node) { return node.node == node_a; });
-        auto it_b = std::find_if(output_nodes.begin(), output_nodes.end(), [&node_b](const Node& node) { return node.node == node_b; });
-
-        if (it_a == output_nodes.end() || it_b == output_nodes.end()) {
-            throw std::runtime_error("Node names in input and output files do not match.");
-        }
-
-        if (verbose) std::cout << "Found nodes " << it_a->node << " and " << it_b->node << " in output file." << std::endl;
-        auto node_0 = std::make_shared<Node>(*it_a);
-        auto node_1 = std::make_shared<Node>(*it_b);
-        Edge new_edge = Edge{node_0, node_1, calc_angle(*node_0, *node_1)};
-        output_edges.push_back(new_edge);
-    }
-    return output_edges;
-}
-
-std::vector<Edge_new> get_output_edges(const std::vector<Edge_new>& input_edges, const std::vector<std::shared_ptr<Node>>& output_nodes) {
-    std::vector<Edge_new> output_edges;
-    output_edges.reserve(input_edges.size());
-
-    for (const auto& input_edge : input_edges) {
-        if (verbose) std::cout << "Looking for nodes " << input_edges.size() << " in output file." << std::endl;
-
-        auto new_edge = Edge_new{input_edge.node_0, input_edge.node_1, calc_angle(*output_nodes[input_edge.node_0], *output_nodes[input_edge.node_1])};
+        auto new_edge = Edge{input_edge.node_0, input_edge.node_1, calc_angle(*output_nodes[input_edge.node_0], *output_nodes[input_edge.node_1])};
         output_edges.push_back(new_edge);
     }
     return output_edges;
 }
 
 
-void save_nodes(const std::vector<std::shared_ptr<Node>>& nodes_output, std::string& save_file, const double& total_score, const bool dry_run) {
+void save_nodes(const std::vector<std::shared_ptr<Node>>& nodes_output, std::string save_file, const double& total_score, const bool dry_run) {
 
     if (std::size_t pos = save_file.find("_score_"); pos != std::string::npos) {
         save_file = save_file.substr(0, pos) + "_score_" + std::to_string(total_score) + ".txt";

@@ -3,13 +3,54 @@
 #include "utils.h"
 #include <iostream>
 
-void test_input_edges(const std::vector<Edge_new> &input_edges, const std::vector<std::shared_ptr<Node>> &input_nodes) {
+#define verbose false
+
+void test_input_edges(const std::vector<Edge> &input_edges, const std::vector<std::shared_ptr<Node>> &input_nodes) {
     for (const auto &edge: input_edges) {
         std::cout << "Edge: " << input_nodes[edge.node_0]->node << " " << input_nodes[edge.node_1]->node << " " << edge.angle << std::endl;
     }
 }
 
-auto const verbose = false;
+void score_files(const std::string &input_file, const std::vector<std::string> &output_files) {
+    auto [input_nodes, input_edges] = read_input_file(input_file);
+    if (verbose) test_input_edges(input_edges, input_nodes);
+
+    std::vector<std::shared_ptr<Node>> output_nodes;
+    std::vector<Edge> output_edges;
+
+    for (const std::string &outputFile: output_files) {
+        output_nodes = read_output_nodes(outputFile);
+        output_edges = get_output_edges(input_edges, output_nodes);
+
+        Score score = calc_score(output_nodes, input_edges, output_edges);
+        printScore(score, outputFile);
+    }
+}
+
+unsigned long optimize_file(const std::string &input_file, const std::string &output_file, int runtime, double max_perturbation, double temperature, double cooling_rate, bool dry_run = false) {
+    auto [input_nodes, input_edges] = read_input_file(input_file);
+    if (verbose) test_input_edges(input_edges, input_nodes);
+
+    std::vector<std::shared_ptr<Node>> output_nodes = read_output_nodes(output_file);
+    std::vector<Edge> output_edges = get_output_edges(input_edges, output_nodes);
+
+    Score start_score = calc_score(output_nodes, input_edges, output_edges);
+
+    auto iterations = optimize_positions(input_edges, output_nodes, output_edges, runtime, temperature, cooling_rate, max_perturbation);
+
+    Score case_score = calc_score(output_nodes, input_edges, output_edges);
+    std::cout << "Final Score: " << case_score.total_score << " (Overlap: " << case_score.overlap << ", Distance " <<
+              case_score.distance << ", Angle: " << case_score.angle << ")" << std::endl;
+
+    if (start_score.total_score < std::floor(case_score.total_score)) {
+        std::cout << "Score improved by " << case_score.total_score - start_score.total_score << std::endl;
+        save_nodes(output_nodes, output_file, case_score.total_score, dry_run);
+    } else {
+        std::cout << "Score did not improve" << std::endl;
+    }
+
+    return iterations;
+}
 
 int main(int argc, char *argv[]) {
     // Commandline Arguments
@@ -19,6 +60,7 @@ int main(int argc, char *argv[]) {
     double max_perturbation = 0.0; // maximum perturbation for x and y coordinates
     double temperature = 0.0; // Initial temperature for simulated annealing
     double cooling_rate = 0.0; // Cooling rate for simulated annealing
+
     std::string input_file;
     std::vector<std::string> output_files;
     for (int i = 1; i < argc; ++i) {
@@ -101,44 +143,13 @@ int main(int argc, char *argv[]) {
         cooling_rate = 0.99;
     }
 
-    auto [input_nodes, input_edges] = read_input_file(input_file);
-    if (verbose) test_input_edges(input_edges, input_nodes);
-
-    std::vector<std::shared_ptr<Node>> output_nodes;
-    std::vector<Edge_new> output_edges;
-
-    std::string output_file;
-    Score start_score = {0, 0, -1.0, -1.0, -1.0, -1.0};
-    for (const std::string &ofile: output_files) {
-        output_file = ofile;
-        output_nodes = read_output_nodes(output_file);
-        output_edges = get_output_edges(input_edges, output_nodes);
-
-        start_score = calc_score(output_nodes, input_edges, output_edges);
-
-        std::cout << "Score:       " << start_score.total_score << " (Overlap: " << start_score.overlap << ", Distance "
-                  << start_score.distance << ", Angle: " << start_score.angle << ", n: " << start_score.n << ", k: "
-                  << start_score.k << ") \t" << output_file << std::endl;
-    }
+    score_files(input_file, output_files);
 
     if (score_only) return 0;
 
     auto time_global_start = std::chrono::high_resolution_clock::now();
 
-    // Optimize the positions of the nodes
-    const auto iterations = optimize_positions(input_edges, output_nodes, output_edges, runtime, temperature, cooling_rate, max_perturbation);
-
-    // Calculate score
-    Score case_score = calc_score(output_nodes, input_edges, output_edges);
-    std::cout << "Final Score: " << case_score.total_score << " (Overlap: " << case_score.overlap << ", Distance " <<
-              case_score.distance << ", Angle: " << case_score.angle << ")" << std::endl;
-
-    if (start_score.total_score < std::floor(case_score.total_score)) {
-        std::cout << "Score improved by " << case_score.total_score - start_score.total_score << std::endl;
-        save_nodes(output_nodes, output_file, case_score.total_score, dry_run);
-    } else {
-        std::cout << "Score did not improve" << std::endl;
-    }
+    auto iterations = optimize_file(input_file, output_files.back(), runtime, max_perturbation, temperature, cooling_rate);
 
     auto time_global_stop = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> total_elapsed = time_global_stop - time_global_start;

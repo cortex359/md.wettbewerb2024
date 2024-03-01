@@ -5,12 +5,20 @@ function run_test() {
     print -Pu2 "%F{blue}Testing with ${run_solver}:%f"
     {
         ${run_solver} -s input_files/GNI_per_capita_Afro-Eurasia.txt result_files/GNI_per_capita_Afro-Eurasia_score_{3343.781396.txt,3347.178527.txt,3350.083103.txt,3352.215870.txt}
-        ${run_solver} -s input_files/Instant_Noodle_Consumption_Eurasia.txt result_files/Instant_Noodle_Consumption_Eurasia_score_{43.5884.txt,582.719813.txt,812.466111.txt,940.288691.txt,1643.291773.txt,2164.204787.txt,2451.775197.txt,2672.289329.txt,2679.104574.txt,2693.378558.txt}
+        ${run_solver} -s input_files/Instant_Noodle_Consumption_Eurasia.txt result_files/Instant_Noodle_Consumption_Eurasia_score_{582.719813.txt,812.466111.txt,940.288691.txt,1643.291773.txt,2164.204787.txt,2451.775197.txt,2672.289329.txt,2679.104574.txt,2693.378558.txt}
+	${run_solver} -s input_files/CO2_Production_Afro-Eurasia.txt result_files/CO2_Production_Afro-Eurasia_score_{570.972145.txt,3348.524030.txt,3349.919964.txt}
         ${run_solver} -s input_files/Deutschlands_Nachbarn.txt result_files/Deutschlands_Nachbarn_score_{171.62.txt,1031.898990.txt,2122.297626.txt,2148.279886.txt,2166.032515.txt}
         ${run_solver} -s input_files/Area_Americas.txt result_files/Area_Americas_score_{690.870329.txt,710.515235.txt,763.411003.txt,836.836568.txt,1127.457673.txt,1139.784260.txt,1283.180516.txt,2378.294021.txt}
+	${run_solver} -s input_files/Area_Asia.txt result_files/Area_Asia_score_{1242.834855.txt,1558.793020.txt,3254.655542.txt,3550.628894.txt,3616.060141.txt}
+	${run_solver} -s input_files/Area_Europe.txt result_files/Area_Europe_score_{651.152827.txt,778.041825.txt,792.246113.txt,925.029644.txt,1080.579605.txt,1259.563930.txt,1394.443190.txt,3572.668672.txt,3843.413269.txt,3857.295541.txt,3862.722888.txt}
+	${run_solver} -s input_files/Area_Afro-Eurasia.txt result_files/Area_Afro-Eurasia_score_{3273.231200.txt,3940.576765.txt,4064.202410.txt,4094.356510.txt,4164.722834.txt,4209.596363.txt,4220.615531.txt,4242.583765.txt,4266.218620.txt,4290.895356.txt,4326.483025.txt,4373.080205.txt,4389.875503.txt}
+	${run_solver} -s input_files/Population_Afro-Eurasia.txt result_files/Population_Afro-Eurasia{_score_3525.122701.txt,_score_3556.293014.txt,_score_3578.842596.txt,_score_3593.791114.txt,_score_3609.381526.txt,_score_3612.681604.txt}
+	${run_solver} -s input_files/Population_Americas.txt result_files/Population_Americas_score_{1730.210100.txt,1935.415176.txt,2226.122262.txt,2935.104507.txt,3475.429653.txt,3667.474130.txt,4323.169718.txt,4451.106430.txt,4476.643269.txt}
+	${run_solver} -s input_files/Population_Density_Americas.txt result_files/Population_Density_Americas_score_{896.245656.txt,1032.825787.txt,1136.843790.txt,1169.725266.txt,1177.272129.txt,1178.435605.txt}
+	${run_solver} -s input_files/Population_Density_Afro-Eurasia.txt result_files/Population_Density_Afro-Eurasia_score_3418.66.txt
     } >| /tmp/test_solver.output
 
-    diff -s ./tests/test_solver.output /tmp/test_solver.output
+    diff -s "./tests/test_solver.1.0.5.output" /tmp/test_solver.output
     return $?
 }
 

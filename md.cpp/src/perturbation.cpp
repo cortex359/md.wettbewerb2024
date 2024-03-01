@@ -6,9 +6,9 @@ double perturb(double coordinate, double max_perturbation, std::mt19937& rng, st
 }
 
 unsigned long int optimize_positions(
-                        const std::vector<Edge_new>& input_edges,
+                        const std::vector<Edge>& input_edges,
                         std::vector<std::shared_ptr<Node>>& output_nodes,
-                        std::vector<Edge_new>& output_edges,
+                        std::vector<Edge>& output_edges,
                         int runtime,
                         double temperature = 1.0, // Initial temperature for simulated annealing
                         double cooling_rate = 0.99, // Cooling rate for simulated annealing
@@ -34,7 +34,7 @@ unsigned long int optimize_positions(
             node->y = perturb(node->y, max_perturbation, rng, dist);
 
             // Update the edges
-            const std::vector<Edge_new> updated_edges = update_angles(output_edges, output_nodes);
+            const std::vector<Edge> updated_edges = update_angles(output_edges, output_nodes);
 
             // Calculate the score with the new position
             double new_score = calc_score(output_nodes, input_edges, updated_edges).total_score;
@@ -56,19 +56,10 @@ unsigned long int optimize_positions(
     return iterations;
 }
 
-std::vector<Edge_new> update_angles(const std::vector<Edge_new>& output_edges, const std::vector<std::shared_ptr<Node>>& nodes) {
+std::vector<Edge> update_angles(const std::vector<Edge>& output_edges, const std::vector<std::shared_ptr<Node>>& nodes) {
     auto updated_edges = output_edges;
     for (auto& edge : updated_edges) {
         edge.angle = calc_angle(*nodes[edge.node_0], *nodes[edge.node_1]);
-    }
-    return updated_edges;
-}
-
-//delete
-std::vector<Edge> update_angles(const std::vector<Edge>& output_edges) {
-    auto updated_edges = output_edges;
-    for (auto& edge : updated_edges) {
-        edge.angle = calc_angle(*edge.node_0, *edge.node_1);
     }
     return updated_edges;
 }
