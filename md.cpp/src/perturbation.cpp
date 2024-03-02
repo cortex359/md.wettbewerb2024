@@ -1,8 +1,67 @@
 #include "perturbation.h"
 #include "utils.h"
 
+
 double perturb(double coordinate, double max_perturbation, std::mt19937& rng, std::uniform_real_distribution<>& dist) {
     return coordinate + max_perturbation * dist(rng);
+}
+
+// Funktion, um die relevanten Knoten zu identifizieren
+std::set<unsigned int> find_relevant_nodes(
+        const std::vector<Edge>& input_edges,
+        const std::vector<Edge>& output_edges,
+        const std::vector<std::shared_ptr<Node>>& output_nodes) {
+
+    // Identifiziere Knoten mit maximaler Überlappung
+    double max_overlap = 0.0;
+    std::pair<unsigned int, unsigned int> max_overlap_nodes;
+    for (size_t i = 0; i < output_nodes.size(); ++i) {
+        for (size_t j = i + 1; j < output_nodes.size(); ++j) {
+            double overlap = calc_overlap(*output_nodes[i], *output_nodes[j]);
+            if (overlap > max_overlap) {
+                max_overlap = overlap;
+                max_overlap_nodes = std::make_pair(i, j);
+            }
+        }
+    }
+
+    // Identifiziere Knoten mit maximaler Winkelabweichung oder Abstand
+    std::pair<unsigned int, unsigned int> max_angle_node_indices;
+    std::pair<unsigned int, unsigned int> max_distance_node_indices;
+
+    double max_angle = 0.0;
+    double max_distance = 0.0;
+
+    for (std::size_t i = 0; i < input_edges.size(); ++i) {
+        const auto& input_edge = input_edges[i];
+        const auto& output_edge = output_edges[i];
+
+        // Winkelberechnung
+        double angle_diff = std::fabs(output_edge.angle - input_edge.angle);
+        angle_diff = std::min(angle_diff, 2.0 * M_PI - angle_diff);
+        if (angle_diff > max_angle) {
+            max_angle = angle_diff;
+            max_angle_node_indices = {input_edge.node_0, input_edge.node_1};
+        }
+
+        // Abstandsberechnung
+        double distance = calc_distance(output_nodes[input_edge.node_0], output_nodes[input_edge.node_1]);
+        if (distance > max_distance) {
+            max_distance = distance;
+            max_distance_node_indices = {input_edge.node_0, input_edge.node_1};
+        }
+    }
+
+    // Füge die gefundenen relevanten Knoten in ein Set ein, um Duplikate zu vermeiden
+    std::set<unsigned int> relevant_nodes;
+    relevant_nodes.insert(max_overlap_nodes.first);
+    relevant_nodes.insert(max_overlap_nodes.second);
+    relevant_nodes.insert(max_angle_node_indices.first);
+    relevant_nodes.insert(max_angle_node_indices.second);
+    relevant_nodes.insert(max_distance_node_indices.first);
+    relevant_nodes.insert(max_distance_node_indices.second);
+
+    return relevant_nodes;
 }
 
 unsigned long int optimize_positions(
@@ -23,7 +82,9 @@ unsigned long int optimize_positions(
 
     unsigned long int iterations = 0;
     while (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - start_time).count() < runtime) {
-        for (auto& node : output_nodes) {
+        auto relevant_nodes = find_relevant_nodes(input_edges, output_edges, output_nodes);
+        for (unsigned int idx : relevant_nodes) {
+            auto& node = output_nodes[idx];
 
             // Save the current position
             double original_x = node->x;

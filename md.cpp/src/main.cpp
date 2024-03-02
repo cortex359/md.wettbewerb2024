@@ -39,8 +39,11 @@ unsigned long optimize_file(const std::string &input_file, const std::string &ou
     auto iterations = optimize_positions(input_edges, output_nodes, output_edges, runtime, temperature, cooling_rate, max_perturbation);
 
     Score case_score = calc_score(output_nodes, input_edges, output_edges);
-    std::cout << "Final Score: " << case_score.total_score << " (Overlap: " << case_score.overlap << ", Distance " <<
-              case_score.distance << ", Angle: " << case_score.angle << ")" << std::endl;
+    printScore(case_score, "before Rotation");
+
+    rotate_nodes_by_angle_diff(output_nodes, input_edges, output_edges, -1.0);
+    case_score = calc_score(output_nodes, input_edges, output_edges);
+    printScore(case_score, "after rotation");
 
     if (start_score.total_score < std::floor(case_score.total_score)) {
         std::cout << "Score improved by " << case_score.total_score - start_score.total_score << std::endl;
@@ -56,6 +59,7 @@ int main(int argc, char *argv[]) {
     // Commandline Arguments
     bool score_only = false;
     bool dry_run = false;
+    bool rotate_only = false;
     int runtime = 0; // number of seconds to run the optimization
     double max_perturbation = 0.0; // maximum perturbation for x and y coordinates
     double temperature = 0.0; // Initial temperature for simulated annealing
@@ -82,6 +86,8 @@ int main(int argc, char *argv[]) {
             dry_run = true;
         } else if (arg == "-s" || arg == "--score") {
             score_only = true;
+        } else if (arg == "-r" || arg == "--rotate") {
+            rotate_only = true;
         } else if (input_file.empty()) {
             input_file = arg;
         } else if (output_files.empty() || score_only) {
@@ -146,6 +152,11 @@ int main(int argc, char *argv[]) {
     score_files(input_file, output_files);
 
     if (score_only) return 0;
+
+    if (rotate_only) {
+        rotate_file(input_file, output_files[0], dry_run);
+        return 0;
+    }
 
     auto time_global_start = std::chrono::high_resolution_clock::now();
 

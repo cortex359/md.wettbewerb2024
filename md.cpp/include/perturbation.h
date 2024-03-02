@@ -6,6 +6,7 @@
 #include <cmath>
 #include <random>
 #include <chrono>
+#include <set>
 
 double perturb(double coordinate, double max_perturbation, std::mt19937& rng, std::uniform_real_distribution<>& dist);
 unsigned long int optimize_positions(const std::vector<Edge>& input_edges,

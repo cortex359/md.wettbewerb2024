@@ -1,5 +1,4 @@
 #include <stdexcept>
-#include <iostream>
 # include "score.h"
 
 double calc_overlap(const Node& node_a, const Node& node_b) {
@@ -72,7 +71,7 @@ Score calc_score(const std::vector<std::shared_ptr<Node>>& output_nodes,
     return Score({n, k, overlap, distance, angle, total_score});
 }
 
-void printScore(const Score& score, const std::string& file) {
+void printScore(const Score& score, const std::string& file = "") {
     printf("Score %9.3f  (Overlap: %6.2f, Distance: %6.2f, Angle: %6.2f, n: %3d, k: %3d) %s\n",
            score.total_score, score.overlap, score.distance, score.angle,
            score.n, score.k, file.c_str());

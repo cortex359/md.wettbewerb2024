@@ -1,7 +1,7 @@
 #ifndef GRAPH_OPTIMIZATION_H
 #define GRAPH_OPTIMIZATION_H
 
-#include<string>
+#include <string>
 #include <vector>
 #include <map>
 #include <random>
