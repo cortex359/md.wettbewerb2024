@@ -13,3 +13,6 @@ if [[ ! -d venv ]]; then {
     pip install -r requirements.txt
 }; fi
 
+source venv/bin/activate
+
+setopt numeric_glob_sort
