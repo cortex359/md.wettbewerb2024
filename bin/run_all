@@ -1,0 +1,29 @@
+#!/usr/bin/env zsh
+
+setopt numeric_glob_sort
+
+if [[ ${${(s./.)PWD}[-1]} != "md.wettbewerb2024" ]]; then {
+    print -Pu2 "%F{red}calc_overview must be run from md.wettbewerb2024 dir.%f"
+    return 1
+}; fi
+
+if (( ARGC != 2 )); then {
+    print -Pu2 "%F{red}Incorrect arguments%f"
+    print -Pu2 "Usage: run_all seconds perturbation"
+    return 2
+}; fi
+
+print -Pu2 "%F{blue}Running all for $1 seconds and with max_perturbation=$2%f"
+
+typeset -A scores=()
+cd -q result_files
+for f in *_score_*.txt(on) ; do {
+    test_case=${${(s._score_.)f}[1]}
+    scores+=( [${test_case}]=${f} )
+}; done
+
+cd -q ..
+typeset -i runtime=$1
+for k v in ${(Akv)scores} ; do {
+    ./bin/graph_optimization input_files/${k}.txt result_files/${v} $runtime $2 &
+}; done

@@ -1,0 +1,21 @@
+#!/usr/bin/env zsh
+
+setopt numeric_glob_sort
+
+if [[ ${${(s./.)PWD}[-1]} != "md.wettbewerb2024" ]]; then {
+    print -Pu2 "%F{red}calc_overview must be run from md.wettbewerb2024 dir.%f"
+    return 1
+}; fi
+
+typeset -A scores=()
+
+cd -q result_files
+for f in *_score_*.txt(on) ; do {
+    test_case=${${(s._score_.)f}[1]}
+    scores+=( [${test_case}]=${f} )
+}; done
+
+cd -q ..
+for k v in ${(Akv)scores} ; do {
+    ./bin/graph_optimization -s input_files/${k}.txt result_files/${v}
+}; done | awk 'BEGIN{ summe=0; }; { print; summe += $2 }; END{ print("  -> ", summe); }'

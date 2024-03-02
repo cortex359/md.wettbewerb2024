@@ -72,7 +72,7 @@ int main(int argc, char *argv[]) {
         if (arg == "-h" || arg == "--help") {
             std::cerr << "Usage: " << argv[0] << " [-h|--help] [-v|--version]" << std::endl;
             std::cerr << "       " << argv[0] << " [-s|--score] input_file output_file [output_file_2, ...]" << std::endl;
-            std::cerr << "       " << argv[0] << " input_file output_file [seconds=10] [max_pertubation=0.1] [temperature=1.0] [cooling_rate=0.99]" << std::endl;
+            std::cerr << "       " << argv[0] << " input_file output_file [seconds=10] [max_pertubation=0.01] [temperature=1.0] [cooling_rate=0.99]" << std::endl;
             std::cerr << "       " << argv[0] << " --rescale input_file output_file [seconds=10] [steps=100] [step_size=0.1] [offset=0]" << std::endl;
             return 0;
         }
@@ -164,7 +164,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (runtime == 0) runtime = 10;
-    if (max_perturbation == 0.0) max_perturbation = 0.1;
+    if (max_perturbation == 0.0) max_perturbation = 0.01;
     if (temperature == 0.0) temperature = 1.0;
     if (cooling_rate == 0.0) cooling_rate = 0.99;
 
@@ -203,7 +203,7 @@ int main(int argc, char *argv[]) {
             Score rescale_score = calc_score(copy_nodes, copy_edges, k);
             printScore(rescale_score, "rescale by " + std::to_string(factor));
 
-            optimize_positions(copy_nodes, copy_edges, k, runtime / rescale_steps, temperature, cooling_rate, max_perturbation * factor / 100);
+            optimize_positions(copy_nodes, copy_edges, k, runtime / rescale_steps, temperature, cooling_rate, max_perturbation);
             Score case_score = calc_score(copy_nodes, copy_edges, k);
             printScore(case_score, "           -> " + std::to_string(factor));
             if (case_score.total_score > best_score.total_score) {
