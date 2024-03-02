@@ -94,8 +94,9 @@ unsigned long int optimize_positions(
             double original_y = node->y;
 
             // Perturb the position
-            node->x = perturb(node->x, max_perturbation, rng, dist);
-            node->y = perturb(node->y, max_perturbation, rng, dist);
+            double relative_perturbation = max_perturbation * node->radius;
+            node->x = perturb(node->x, relative_perturbation, rng, dist);
+            node->y = perturb(node->y, relative_perturbation, rng, dist);
 
             // Update the edges
             const std::vector<Edge> updated_edges = update_angles(output_edges, output_nodes);
