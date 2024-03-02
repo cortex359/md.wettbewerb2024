@@ -12,7 +12,7 @@ void test_input_edges(const std::vector<Edge> &input_edges, const std::vector<st
 }
 
 void score_files(const std::string &input_file, const std::vector<std::string> &output_files) {
-    auto [input_nodes, input_edges] = read_input_file(input_file);
+    auto [input_nodes, input_edges, k] = read_input_file(input_file);
     if (verbose) test_input_edges(input_edges, input_nodes);
 
     std::vector<std::shared_ptr<Node>> output_nodes;
@@ -22,28 +22,23 @@ void score_files(const std::string &input_file, const std::vector<std::string> &
         output_nodes = read_output_nodes(outputFile);
         output_edges = get_output_edges(input_edges, output_nodes);
 
-        Score score = calc_score(output_nodes, input_edges, output_edges);
+        Score score = calc_score(output_nodes, output_edges, k);
         printScore(score, outputFile);
     }
 }
 
 unsigned long optimize_file(const std::string &input_file, const std::string &output_file, int runtime, double max_perturbation, double temperature, double cooling_rate, bool dry_run = false) {
-    auto [input_nodes, input_edges] = read_input_file(input_file);
+    auto [input_nodes, input_edges, k] = read_input_file(input_file);
     if (verbose) test_input_edges(input_edges, input_nodes);
 
     std::vector<std::shared_ptr<Node>> output_nodes = read_output_nodes(output_file);
     std::vector<Edge> output_edges = get_output_edges(input_edges, output_nodes);
 
-    Score start_score = calc_score(output_nodes, input_edges, output_edges);
+    Score start_score = calc_score(output_nodes, output_edges, k);
 
-    auto iterations = optimize_positions(input_edges, output_nodes, output_edges, runtime, temperature, cooling_rate, max_perturbation);
+    auto iterations = optimize_positions(output_nodes, output_edges, k, runtime, temperature, cooling_rate, max_perturbation);
 
-    Score case_score = calc_score(output_nodes, input_edges, output_edges);
-    printScore(case_score, "before Rotation");
-
-    rotate_nodes_by_angle_diff(output_nodes, input_edges, output_edges, -1.0);
-    case_score = calc_score(output_nodes, input_edges, output_edges);
-    printScore(case_score, "after rotation");
+    Score case_score = left_right_rotation(output_nodes, output_edges, k);
 
     if (start_score.total_score < std::floor(case_score.total_score)) {
         std::cout << "Score improved by " << case_score.total_score - start_score.total_score << std::endl;

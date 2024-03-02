@@ -7,9 +7,21 @@ struct parsing_file_exception : public std::runtime_error {
     using runtime_error::runtime_error;
 };
 
-std::pair<std::vector<std::shared_ptr<Node>>, std::vector<Edge>> read_input_file(const std::string &file_path) {
+void removeSymmetricPairs(std::vector<std::pair<std::string, std::string>>& vec) {
+    auto it = vec.begin();
+    while (it != vec.end()) {
+        // search reversed pair
+        auto toFind = std::make_pair(it->second, it->first);
+        if (auto found = std::find(it + 1, vec.end(), toFind); found != vec.end()) {
+            vec.erase(found);
+        }
+        ++it;
+    }
+}
+
+std::tuple<std::vector<std::shared_ptr<Node>>, std::vector<Edge>, unsigned int> read_input_file(const std::string &file_path) {
     std::vector<std::shared_ptr<Node>> nodes;
-    std::vector<Edge> edges_new;
+    std::vector<Edge> edges;
     std::vector<std::pair<std::string, std::string>> edges_str;
     std::ifstream file(file_path);
     std::string line;
@@ -37,7 +49,6 @@ std::pair<std::vector<std::shared_ptr<Node>>, std::vector<Edge>> read_input_file
         iss >> node_0 >> node_1;
         edges_str.emplace_back(node_0, node_1);
     }
-
     file.close();
 
     if (nodes.empty()) {
@@ -46,6 +57,10 @@ std::pair<std::vector<std::shared_ptr<Node>>, std::vector<Edge>> read_input_file
     if (edges_str.empty()) {
         throw parsing_file_exception("No edges found in file: " + file_path);
     }
+    auto k = static_cast<unsigned int>(edges_str.size());
+
+    removeSymmetricPairs(edges_str);
+    if (verbose) std::cout << "Reduced edges from " << k << " to " << edges_str.size() << std::endl;
 
     for (const auto &edge : edges_str) {
         // find Node with name edge.first and edge.second
@@ -63,10 +78,11 @@ std::pair<std::vector<std::shared_ptr<Node>>, std::vector<Edge>> read_input_file
         // and also create a List of edges for faster access
         auto node_a = *it_0;
         auto node_b = *it_1;
-        edges_new.emplace_back(Edge{idx_0, idx_1, calc_angle(*node_a, *node_b)});
+        double input_angle = calc_angle(*node_a, *node_b);
+        edges.emplace_back(Edge{idx_0, idx_1, input_angle, input_angle});
     }
-    if (verbose) std::cout << "Read " << nodes.size() << " nodes and " << edges_new.size() << " edges from file: " << file_path << std::endl;
-    return std::make_pair(nodes, edges_new);
+    if (verbose) std::cout << "Read " << nodes.size() << " nodes and " << edges.size() << " edges from file: " << file_path << std::endl;
+    return std::make_tuple(nodes, edges, k);
 }
 
 std::vector<std::shared_ptr<Node>> read_output_nodes(const std::string& file_path) {
@@ -112,7 +128,7 @@ std::vector<Edge> get_output_edges(const std::vector<Edge>& input_edges, const s
     for (const auto& input_edge : input_edges) {
         if (verbose) std::cout << "Looking for nodes " << input_edges.size() << " in output file." << std::endl;
 
-        auto new_edge = Edge{input_edge.node_0, input_edge.node_1, calc_angle(*output_nodes[input_edge.node_0], *output_nodes[input_edge.node_1])};
+        auto new_edge = Edge{input_edge.node_0, input_edge.node_1, calc_angle(*output_nodes[input_edge.node_0], *output_nodes[input_edge.node_1]), input_edge.target_angle};
         output_edges.push_back(new_edge);
     }
     return output_edges;
@@ -156,6 +172,21 @@ void save_nodes(const std::vector<std::shared_ptr<Node>>& nodes_output, std::str
     }
 }
 
+std::tuple<std::vector<std::shared_ptr<Node>>, std::vector<Edge>> copy_nodes_edges(const std::vector<std::shared_ptr<Node>>& nodes, const std::vector<Edge>& edges) {
+    std::vector<std::shared_ptr<Node>> nodes_copy;
+    std::vector<Edge> edges_copy;
+
+    for (const auto& node : nodes) {
+        nodes_copy.push_back(std::make_shared<Node>(Node({node->node, node->value, node->radius, node->x, node->y})));
+    }
+
+    for (const auto& edge : edges) {
+        edges_copy.push_back(Edge{edge.node_0, edge.node_1, edge.angle, edge.target_angle});
+    }
+
+    return std::make_tuple(nodes_copy, edges_copy);
+}
+
 // Hilfsfunktion zur Rotation eines Punktes um einen gegebenen Winkel
 void rotate_point(double& x, double& y, double angle) {
     double cos_angle = std::cos(angle);
@@ -170,14 +201,13 @@ void rotate_point(double& x, double& y, double angle) {
 
 // Funktion, die alle Nodes um die Differenz der größten und der zweitgrößten Winkeldifferenz rotiert
 void rotate_nodes_by_angle_diff(std::vector<std::shared_ptr<Node>>& output_nodes,
-                                const std::vector<Edge>& input_edges,
                                 std::vector<Edge>& output_edges,
                                 const float factor) {
     std::vector<double> angle_diffs;
 
     // Berechne Winkeldifferenzen für alle Kanten.
-    for (int i = 0; i < input_edges.size(); ++i) {
-        double angle_diff = std::fabs(input_edges[i].angle - output_edges[i].angle);
+    for (auto const & output_edge : output_edges) {
+        double angle_diff = std::fabs(output_edge.target_angle - output_edge.angle);
         angle_diff = std::min(angle_diff, 2 * M_PI - angle_diff); // Korrigiere Winkel zu [0, π]
         angle_diffs.push_back(angle_diff);
     }
@@ -186,11 +216,15 @@ void rotate_nodes_by_angle_diff(std::vector<std::shared_ptr<Node>>& output_nodes
     std::nth_element(angle_diffs.begin(), angle_diffs.begin() + 1, angle_diffs.end(), std::greater<>());
     double largest_angle_diff = angle_diffs[0];
     double second_largest_angle_diff = angle_diffs[1];
-    std::cout << "Largest angle diff: " << largest_angle_diff * 100 / M_PI << ", second largest angle diff: " << second_largest_angle_diff * 100 / M_PI << std::endl;
+
     // Berechne den Winkel um den alle Knoten rotiert werden müssen.
     double rotation_angle = (largest_angle_diff - second_largest_angle_diff) * factor;
+    if (std::fabs(rotation_angle) < 0.001) return ;
+
+    std::cout << "Largest angle diff: " << largest_angle_diff * 100 / M_PI << ", second largest angle diff: " << second_largest_angle_diff * 100 / M_PI << std::endl;
+
     // Rotiere alle Knoten um diesen Winkel.
-    for (auto& node : output_nodes) {
+    for (auto const& node : output_nodes) {
         rotate_point(node->x, node->y, rotation_angle);
     }
 
@@ -199,28 +233,45 @@ void rotate_nodes_by_angle_diff(std::vector<std::shared_ptr<Node>>& output_nodes
     }
 }
 
-Score left_right_rotation(std::vector<std::shared_ptr<Node>> &output_nodes, const std::vector<Edge> &input_edges, std::vector<Edge> &output_edges) {
-    Score case_score = calc_score(output_nodes, input_edges, output_edges);
+
+
+Score left_right_rotation(std::vector<std::shared_ptr<Node>> &output_nodes, std::vector<Edge> &output_edges, const unsigned int k) {
+    Score case_score = calc_score(output_nodes, output_edges, k);
     printScore(case_score, "before Rotation");
 
-    rotate_nodes_by_angle_diff(output_nodes, input_edges, output_edges, -0.5);
-    case_score = calc_score(output_nodes, input_edges, output_edges);
-    printScore(case_score, "-0.5");
+    auto before_rotation = copy_nodes_edges(output_nodes, output_edges);
 
-    rotate_nodes_by_angle_diff(output_nodes, input_edges, output_edges, 0.5);
-    case_score = calc_score(output_nodes, input_edges, output_edges);
-    printScore(case_score, "0.5");
+    rotate_nodes_by_angle_diff(output_nodes, output_edges, -0.5);
+    Score after_rotation_score = calc_score(output_nodes, output_edges, k);
+    printScore(after_rotation_score, "-0.5");
+
+    if (after_rotation_score.total_score > case_score.total_score) {
+        case_score = after_rotation_score;
+    } else {
+        std::tie(output_nodes, output_edges) = before_rotation;
+    }
+
+    before_rotation = copy_nodes_edges(output_nodes, output_edges);
+    rotate_nodes_by_angle_diff(output_nodes, output_edges, 0.5);
+    after_rotation_score = calc_score(output_nodes, output_edges, k);
+    printScore(after_rotation_score, "0.5");
+
+    if (after_rotation_score.total_score > case_score.total_score) {
+        case_score = after_rotation_score;
+    } else {
+        std::tie(output_nodes, output_edges) = before_rotation;
+    }
 
     return case_score;
 }
 
 void rotate_file(const std::string &input_file, const std::string &output_file, bool dry_run) {
-    auto [input_nodes, input_edges] = read_input_file(input_file);
+    auto [input_nodes, input_edges, k] = read_input_file(input_file);
     std::vector<std::shared_ptr<Node>> output_nodes = read_output_nodes(output_file);
     std::vector<Edge> output_edges = get_output_edges(input_edges, output_nodes);
 
-    Score start_score = calc_score(output_nodes, input_edges, output_edges);
-    Score case_score = left_right_rotation(output_nodes, input_edges, output_edges);
+    Score start_score = calc_score(output_nodes, output_edges, k);
+    Score case_score = left_right_rotation(output_nodes, output_edges, k);
 
     if (start_score.total_score < std::floor(case_score.total_score)) {
         std::cout << "Score improved by " << case_score.total_score - start_score.total_score << std::endl;

@@ -8,7 +8,6 @@ double perturb(double coordinate, double max_perturbation, std::mt19937& rng, st
 
 // Funktion, um die relevanten Knoten zu identifizieren
 std::set<unsigned int> find_relevant_nodes(
-        const std::vector<Edge>& input_edges,
         const std::vector<Edge>& output_edges,
         const std::vector<std::shared_ptr<Node>>& output_nodes) {
 
@@ -32,23 +31,20 @@ std::set<unsigned int> find_relevant_nodes(
     double max_angle = 0.0;
     double max_distance = 0.0;
 
-    for (std::size_t i = 0; i < input_edges.size(); ++i) {
-        const auto& input_edge = input_edges[i];
-        const auto& output_edge = output_edges[i];
-
+    for (const auto & output_edge : output_edges) {
         // Winkelberechnung
-        double angle_diff = std::fabs(output_edge.angle - input_edge.angle);
+        double angle_diff = std::fabs(output_edge.target_angle - output_edge.angle);
         angle_diff = std::min(angle_diff, 2.0 * M_PI - angle_diff);
         if (angle_diff > max_angle) {
             max_angle = angle_diff;
-            max_angle_node_indices = {input_edge.node_0, input_edge.node_1};
+            max_angle_node_indices = {output_edge.node_0, output_edge.node_1};
         }
 
         // Abstandsberechnung
-        double distance = calc_distance(output_nodes[input_edge.node_0], output_nodes[input_edge.node_1]);
+        double distance = calc_distance(output_nodes[output_edge.node_0], output_nodes[output_edge.node_1]);
         if (distance > max_distance) {
             max_distance = distance;
-            max_distance_node_indices = {input_edge.node_0, input_edge.node_1};
+            max_distance_node_indices = {output_edge.node_0, output_edge.node_1};
         }
     }
 
@@ -65,9 +61,9 @@ std::set<unsigned int> find_relevant_nodes(
 }
 
 unsigned long int optimize_positions(
-                        const std::vector<Edge>& input_edges,
                         std::vector<std::shared_ptr<Node>>& output_nodes,
                         std::vector<Edge>& output_edges,
+                        const unsigned int k,
                         int runtime,
                         double temperature = 1.0, // Initial temperature for simulated annealing
                         double cooling_rate = 0.99, // Cooling rate for simulated annealing
@@ -78,11 +74,11 @@ unsigned long int optimize_positions(
     std::uniform_real_distribution dist(-1.0, 1.0);
 
     const auto start_time{std::chrono::steady_clock::now()};
-    double current_score = calc_score(output_nodes, input_edges, output_edges).total_score;
+    double current_score = calc_score(output_nodes, output_edges, k).total_score;
 
     unsigned long int iterations = 0;
     while (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - start_time).count() < runtime) {
-        auto relevant_nodes = find_relevant_nodes(input_edges, output_edges, output_nodes);
+        auto relevant_nodes = find_relevant_nodes(output_edges, output_nodes);
         for (unsigned int idx : relevant_nodes) {
             auto& node = output_nodes[idx];
 
@@ -98,7 +94,7 @@ unsigned long int optimize_positions(
             const std::vector<Edge> updated_edges = update_angles(output_edges, output_nodes);
 
             // Calculate the score with the new position
-            double new_score = calc_score(output_nodes, input_edges, updated_edges).total_score;
+            double new_score = calc_score(output_nodes, updated_edges, k).total_score;
 
             // Revert if the new score is worse, considering the temperature for simulated annealing
             if (new_score < current_score && exp((new_score - current_score) / temperature) < dist(rng)) {

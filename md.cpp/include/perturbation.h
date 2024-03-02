@@ -9,9 +9,9 @@
 #include <set>
 
 double perturb(double coordinate, double max_perturbation, std::mt19937& rng, std::uniform_real_distribution<>& dist);
-unsigned long int optimize_positions(const std::vector<Edge>& input_edges,
-                                     std::vector<std::shared_ptr<Node>>& output_nodes,
+unsigned long int optimize_positions(std::vector<std::shared_ptr<Node>>& output_nodes,
                                      std::vector<Edge>& output_edges,
+                                     unsigned int k,
                                      int runtime,
                                      double temperature,
                                      double cooling_rate,

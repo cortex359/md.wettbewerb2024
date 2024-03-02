@@ -17,13 +17,13 @@ struct Node {
     double radius;
     double x;
     double y;
-    //std::vector<Node*> neighbors;
 };
 
 struct Edge {
     unsigned int node_0 = -1;
     unsigned int node_1 = -1;
     double angle = -1.0;
+    double target_angle = -1.0;
 };
 
 // Score structure for optimization results
@@ -45,10 +45,9 @@ double calc_distance(const std::shared_ptr<Node>& node_a, const std::shared_ptr<
 double calc_distance_max(const std::vector<Edge>& edges, const std::vector<std::shared_ptr<Node>>& nodes);
 
 Score calc_score(const std::vector<std::shared_ptr<Node>>& output_nodes,
-                 const std::vector<Edge>& input_edges,
-                 const std::vector<Edge>& output_edges);
-double find_angle_max(const std::vector<Edge>& input_edges,
-                      const std::vector<Edge>& output_edges);
+                 const std::vector<Edge>& output_edges,
+                 unsigned int k);
+double find_angle_max(const std::vector<Edge>& output_edges);
 double calc_overlap_max(const std::vector<std::shared_ptr<Node>>& nodes);
 
 void printScore(const Score& score, const std::string& file);
