@@ -104,7 +104,7 @@ def check_output_relations(input, output):
     diff = input_relations - (output_relations * output_relations)
     diff = diff.abs()
 
-    print(diff)
+    #print(diff)
 
     if RUNNING_IN_NOTEBOOK:
         print('Input relations:')
