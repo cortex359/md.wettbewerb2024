@@ -17,5 +17,6 @@ unsigned long int optimize_positions(std::vector<std::shared_ptr<Node>>& output_
                                      double cooling_rate,
                                      double max_perturbation);
 std::vector<Edge> update_angles(const std::vector<Edge>& output_edges, const std::vector<std::shared_ptr<Node>>& nodes);
+void rescale_nodes(const std::vector<std::shared_ptr<Node>>& scaled_nodes, double scaling_factor);
 
 #endif //PERTURBATION_H

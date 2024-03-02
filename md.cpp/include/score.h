@@ -13,7 +13,7 @@ const auto VERSION = "1.0.5";
 // Node structure for input graph
 struct Node {
     const std::string node;
-    const double value;
+    double value;
     double radius;
     double x;
     double y;

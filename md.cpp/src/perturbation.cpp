@@ -6,6 +6,13 @@ double perturb(double coordinate, double max_perturbation, std::mt19937& rng, st
     return coordinate + max_perturbation * dist(rng);
 }
 
+void rescale_nodes(const std::vector<std::shared_ptr<Node>>& scaled_nodes, double scaling_factor) {
+    scaling_factor /= std::sqrt(2 * M_PI);
+    for (auto &node: scaled_nodes) {
+        node->radius = std::sqrt(node->value) * scaling_factor;
+    }
+}
+
 // Funktion, um die relevanten Knoten zu identifizieren
 std::set<unsigned int> find_relevant_nodes(
         const std::vector<Edge>& output_edges,

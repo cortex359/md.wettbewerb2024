@@ -134,6 +134,15 @@ std::vector<Edge> get_output_edges(const std::vector<Edge>& input_edges, const s
     return output_edges;
 }
 
+void copy_input_values(const std::vector<std::shared_ptr<Node>>& input_nodes, std::vector<std::shared_ptr<Node>>& output_nodes) {
+    for (const auto& input_node : input_nodes) {
+        auto it = std::find_if(output_nodes.begin(), output_nodes.end(), [&input_node](const std::shared_ptr<Node>& node) { return node->node == input_node->node; });
+        if (it == output_nodes.end()) {
+            throw parsing_file_exception("Node " + input_node->node + " not found in output file");
+        }
+        (*it)->value = input_node->value;
+    }
+}
 
 void save_nodes(const std::vector<std::shared_ptr<Node>>& nodes_output, std::string save_file, const double& total_score, const bool dry_run) {
 

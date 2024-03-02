@@ -55,10 +55,15 @@ int main(int argc, char *argv[]) {
     bool score_only = false;
     bool dry_run = false;
     bool rotate_only = false;
+    bool rescale = false;
     int runtime = 0; // number of seconds to run the optimization
     double max_perturbation = 0.0; // maximum perturbation for x and y coordinates
     double temperature = 0.0; // Initial temperature for simulated annealing
     double cooling_rate = 0.0; // Cooling rate for simulated annealing
+
+    int rescale_steps = 0;
+    double rescale_step_size = 0.0;
+    double rescale_offset = 0.0;
 
     std::string input_file;
     std::vector<std::string> output_files;
@@ -66,11 +71,9 @@ int main(int argc, char *argv[]) {
         std::string arg = argv[i];
         if (arg == "-h" || arg == "--help") {
             std::cerr << "Usage: " << argv[0] << " [-h|--help] [-v|--version]" << std::endl;
-            std::cerr << "       " << argv[0] << " [-s|--score] input_file output_file [output_file_2, ...]"
-                      << std::endl;
-            std::cerr << "       " << argv[0]
-                      << " input_file output_file [seconds=10] [max_pertubation=0.1] [temperature=1.0] [cooling_rate=0.99]"
-                      << std::endl;
+            std::cerr << "       " << argv[0] << " [-s|--score] input_file output_file [output_file_2, ...]" << std::endl;
+            std::cerr << "       " << argv[0] << " input_file output_file [seconds=10] [max_pertubation=0.1] [temperature=1.0] [cooling_rate=0.99]" << std::endl;
+            std::cerr << "       " << argv[0] << " --rescale input_file output_file [seconds=10] [steps=100] [step_size=0.1] [offset=0]" << std::endl;
             return 0;
         }
         if (arg == "-v" || arg == "--version") {
@@ -83,6 +86,8 @@ int main(int argc, char *argv[]) {
             score_only = true;
         } else if (arg == "-r" || arg == "--rotate") {
             rotate_only = true;
+        } else if (arg == "--rescale") {
+            rescale = true;
         } else if (input_file.empty()) {
             input_file = arg;
         } else if (output_files.empty() || score_only) {
@@ -92,6 +97,32 @@ int main(int argc, char *argv[]) {
                 runtime = std::stoi(arg);
             } catch (const std::invalid_argument &e) {
                 std::cerr << "Invalid argument for runtime" << std::endl;
+                return 1;
+            }
+        } else if (rescale) {
+            if (rescale_steps == 0) {
+                try {
+                    rescale_steps = std::stoi(arg);
+                } catch (const std::invalid_argument &e) {
+                    std::cerr << "Invalid argument for rescale_steps" << std::endl;
+                    return 1;
+                }
+            } else if (rescale_step_size == 0.0) {
+                try {
+                    rescale_step_size = std::stod(arg);
+                } catch (const std::invalid_argument &e) {
+                    std::cerr << "Invalid argument for step_size" << std::endl;
+                    return 1;
+                }
+            } else if (rescale_offset == 0.0) {
+                try {
+                    rescale_offset = std::stod(arg);
+                } catch (const std::invalid_argument &e) {
+                    std::cerr << "Invalid argument for offset" << std::endl;
+                    return 1;
+                }
+            } else {
+                std::cerr << "Too many arguments" << std::endl;
                 return 1;
             }
         } else if (max_perturbation == 0.0) {
@@ -131,17 +162,16 @@ int main(int argc, char *argv[]) {
         std::cerr << "No input file or output file specified" << std::endl;
         return 1;
     }
-    if (runtime == 0) {
-        runtime = 10;
-    }
-    if (max_perturbation == 0.0) {
-        max_perturbation = 0.1;
-    }
-    if (temperature == 0.0) {
-        temperature = 1.0;
-    }
-    if (cooling_rate == 0.0) {
-        cooling_rate = 0.99;
+
+    if (runtime == 0) runtime = 10;
+    if (max_perturbation == 0.0) max_perturbation = 0.1;
+    if (temperature == 0.0) temperature = 1.0;
+    if (cooling_rate == 0.0) cooling_rate = 0.99;
+
+    if (rescale) {
+        if (rescale_steps == 0) rescale_steps = 100;
+        if (rescale_step_size == 0.0) rescale_step_size = 0.1;
+        if (rescale_offset == 0.0) rescale_offset = 0.0;
     }
 
     score_files(input_file, output_files);
@@ -150,6 +180,46 @@ int main(int argc, char *argv[]) {
 
     if (rotate_only) {
         rotate_file(input_file, output_files[0], dry_run);
+        return 0;
+    }
+
+    if (rescale) {
+        auto [input_nodes, input_edges, k] = read_input_file(input_file);
+        std::vector<std::shared_ptr<Node>> output_nodes = read_output_nodes(output_files[0]);
+        copy_input_values(input_nodes, output_nodes);
+        std::vector<Edge> output_edges = get_output_edges(input_edges, output_nodes);
+
+        Score start_score = calc_score(output_nodes, output_edges, k);
+        printScore(start_score, "start");
+
+        auto best_results = copy_nodes_edges(output_nodes, output_edges);
+        Score best_score = start_score;
+        for (int i = 1; i < rescale_steps; i++) {
+            double factor = i * rescale_step_size + rescale_offset;
+            auto [copy_nodes, copy_edges] = copy_nodes_edges(output_nodes, output_edges);
+
+            rescale_nodes(copy_nodes, factor);
+
+            Score rescale_score = calc_score(copy_nodes, copy_edges, k);
+            printScore(rescale_score, "rescale by " + std::to_string(factor));
+
+            optimize_positions(copy_nodes, copy_edges, k, runtime / rescale_steps, temperature, cooling_rate, max_perturbation * factor / 100);
+            Score case_score = calc_score(copy_nodes, copy_edges, k);
+            printScore(case_score, "           -> " + std::to_string(factor));
+            if (case_score.total_score > best_score.total_score) {
+                std::cout << "Score improved by " << case_score.total_score - start_score.total_score << std::endl;
+                best_results = copy_nodes_edges(copy_nodes, copy_edges);
+                best_score = case_score;
+            }
+        }
+
+        if (start_score.total_score < std::floor(best_score.total_score)) {
+            std::cout << "Total score improvement by " << best_score.total_score - start_score.total_score << std::endl;
+            auto const& [best_nodes, best_edges] = best_results;
+            save_nodes(best_nodes, output_files.back(), best_score.total_score, dry_run);
+        } else {
+            std::cout << "Total score did not improve." << std::endl;
+        }
         return 0;
     }
 
