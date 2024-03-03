@@ -36,7 +36,8 @@ unsigned long optimize_file(const std::string &input_file, const std::string &ou
 
     Score start_score = calc_score(output_nodes, output_edges, k);
 
-    auto iterations = optimize_positions(output_nodes, output_edges, k, runtime, temperature, cooling_rate, max_perturbation);
+    //auto iterations = optimize_positions(output_nodes, output_edges, k, runtime, temperature, cooling_rate, max_perturbation);
+    auto iterations = optimize_positions_v2(output_nodes, output_edges, k, runtime);
 
     Score case_score = left_right_rotation(output_nodes, output_edges, k);
 
