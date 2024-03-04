@@ -17,13 +17,21 @@ def create_team_list(no_cache=False) -> (dict[str, Team], list[Team]):
     teams: dict[str, Team] = {}
     ranking: list[Team] = []
 
+    # Pattern 2023 und bis Midterm 2024
     # <tr><td>1.</td><td><a href="groups/koeln/" target="_top">koeln</td><td align=right>50</td><td align=right>7876</td></tr>\n<tr>
-    matches = re.findall(r'groups/([0-9a-z_-]+)/"(?:[^>]+>){3}([0-9]+|&nbsp;)(?:[^>]+>){2}([0-9]+)(?:</td></tr>)', get_page("", no_cache=no_cache))
+    # -> groups/([0-9a-z_-]+)/"(?:[^>]+>){3}([0-9]+|&nbsp;)(?:[^>]+>){2}([0-9]+)(?:</td></tr>)
+    # Pattern nach Midterm 2024
+    # <tr><td>3.</td><td><a href="groups/tau/" target="_top">tau</td><td align=right>28973</td><td align=right>63515</td><td align=right>92488</td></tr>
+    # -> groups/([0-9a-z_-]+)/"(?:[^>]+>){3}([0-9]+|&nbsp;)(?:[^>]+>){2}([0-9]+)(?:[^>]+>){2}([0-9]+)(?:</td></tr>)
+    matches = re.findall(r'groups/([0-9a-z_-]+)/"(?:[^>]+>){3}([0-9]+|&nbsp;)(?:[^>]+>){2}([0-9]+)(?:[^>]+>){2}([0-9]+)(?:</td></tr>)', get_page("", no_cache=no_cache))
 
     for g in matches:
         group_name = g[0]
         bonus = 0 if g[1] == '&nbsp;' else int(g[1])
         score = int(g[2])
+        # sanity check
+        if bonus + score != int(g[3]):
+            print(f'{Fore.RED}[ERROR] Score mismatch for {group_name}!{Style.RESET_ALL}')
 
         if group_name in ignore_groups:
             continue
