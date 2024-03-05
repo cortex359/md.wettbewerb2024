@@ -30,17 +30,12 @@ colors = cm.Spectral(np.linspace(0, 1, len(nodes_output)))
 for node, row in nodes_output.iterrows():
     ax.add_patch(plt.Circle((row.x, row.y), row.radius, facecolor=colors[int(row.idx)], alpha=0.5))
     ax.text(row.x, row.y, node, fontsize=6, ha='center', va='center')
-    #ax.annotate(node, xy=(row.x, row.y), xycoords='data', fontsize=10)
 
-for node_0, node_1 in edges:
-    node_a = nodes_output.loc[node_0]
-    node_b = nodes_output.loc[node_1]
-    ax.plot([node_a.x, node_b.x], [node_a.y, node_b.y], 'g-', lw=0.5, alpha=0.3)
 
 for edge, row in output_edges.iterrows():
     node_a = nodes_output.loc[row.node_0]
     node_b = nodes_output.loc[row.node_1]
-    ax.plot([node_a.x, node_b.x], [node_a.y, node_b.y], 'r-', lw=0.5, alpha=0.3)
+    ax.plot([node_a.x, node_b.x], [node_a.y, node_b.y], color='grey', lw=0.5, alpha=0.3)
     #relation = node_a.radius/(node_a.radius + node_b.radius)
     #delta_x = node_a.x - node_b.x
     #delta_y = node_a.y - node_b.y

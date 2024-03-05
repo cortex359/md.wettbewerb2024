@@ -204,8 +204,8 @@ int main(int argc, char *argv[]) {
             Score rescale_score = calc_score(copy_nodes, copy_edges, k);
             printScore(rescale_score, "rescale by " + std::to_string(factor));
 
-            //optimize_positions(copy_nodes, copy_edges, k, runtime / rescale_steps, temperature, cooling_rate, max_perturbation);
-            optimize_positions_v2(copy_nodes, copy_edges, k, runtime / rescale_steps);
+            optimize_positions(copy_nodes, copy_edges, k, runtime / rescale_steps, temperature, cooling_rate, max_perturbation);
+            //optimize_positions_v2(copy_nodes, copy_edges, k, runtime / rescale_steps);
             Score case_score = calc_score(copy_nodes, copy_edges, k);
             printScore(case_score, "           -> " + std::to_string(factor));
             if (case_score.total_score > best_score.total_score) {
