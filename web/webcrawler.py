@@ -8,7 +8,7 @@ from datetime import datetime
 from notification import send_notification
 
 groups = ['tau', 'tetris-for-the-win', 'phoenix', 'fabsch-225', 'nullptr', 'code-mates', 'koeln', 'map-maniac',
-          'horst', 'arli']
+          'horst', 'arli', 'snakes-and-ladders']
 ignore_groups = ['md-demo']
 
 save_path = './data/'

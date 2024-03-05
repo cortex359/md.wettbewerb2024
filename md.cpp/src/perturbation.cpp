@@ -98,7 +98,7 @@ unsigned long int optimize_positions_v2(
 
             std::vector<Edge> updated_edges = update_angles(copy_edges, copy_nodes);
             if (double new_score = calc_score(copy_nodes, updated_edges, k).total_score;
-                    new_score > current_score) {
+                    new_score >= current_score) {
                 output_nodes = copy_nodes;
                 output_edges = updated_edges;
                 current_score = new_score;
@@ -130,33 +130,35 @@ unsigned long int optimize_positions_v2(
                 }
             }
 
-            // Reduce max distance or revert
-            auto [copy_nodes2, copy_edges2] = copy_nodes_edges(output_nodes, output_edges);
-            // Reduce max distance
-            auto [distance_further_away, distance_closer] = decide_further_away(
-                    copy_nodes2[max_distance_node_indices.first], copy_nodes2[max_distance_node_indices.second],
-                    center_of_mass);
-            move_node_further_away(distance_further_away, distance_closer, positiv_dist(rng));
-            std::vector<Edge> updated_edges = update_angles(copy_edges2, copy_nodes2);
-            if (double new_score = calc_score(copy_nodes2, updated_edges, k).total_score;
-                    new_score > current_score) {
-                output_nodes = copy_nodes2;
-                output_edges = updated_edges;
-                current_score = new_score;
-            }
-            //----
+            if (iterations % 31 != 30) {
+                // Reduce max distance or revert
+                auto [copy_nodes2, copy_edges2] = copy_nodes_edges(output_nodes, output_edges);
+                // Reduce max distance
+                auto [distance_further_away, distance_closer] = decide_further_away(
+                        copy_nodes2[max_distance_node_indices.first], copy_nodes2[max_distance_node_indices.second],
+                        center_of_mass);
+                move_node_further_away(distance_further_away, distance_closer, positiv_dist(rng));
+                std::vector<Edge> updated_edges = update_angles(copy_edges2, copy_nodes2);
+                if (double new_score = calc_score(copy_nodes2, updated_edges, k).total_score;
+                        new_score >= current_score) {
+                    output_nodes = copy_nodes2;
+                    output_edges = updated_edges;
+                    current_score = new_score;
+                }
+                //----
 
-            if (iterations % 31 == 30) {
+            } else {
+
                 // Reduce max angle or revert
                 auto [copy_nodes3, copy_edges3] = copy_nodes_edges(output_nodes, output_edges);
                 // rotate
                 rotate_node(copy_nodes3[max_angle_node_indices.first], copy_nodes3[max_angle_node_indices.second],
                             normal_dist(rng) * max_angle);
-                updated_edges = update_angles(copy_edges3, copy_nodes3);
+                std::vector<Edge> updated_edges = update_angles(copy_edges3, copy_nodes3);
                 // Revert if the new score is worse, considering the temperature for simulated annealing
                 // || exp((new_score - current_score) / temperature) > dist(rng)
                 if (double new_score = calc_score(copy_nodes3, updated_edges, k).total_score;
-                        new_score > current_score) {
+                        new_score >= current_score) {
                     output_nodes = copy_nodes3;
                     output_edges = updated_edges;
                     current_score = new_score;
@@ -171,7 +173,7 @@ unsigned long int optimize_positions_v2(
         //std::cout << "Max distance nodes: " << output_nodes[max_distance_node_indices.first]->node << " and " << output_nodes[max_distance_node_indices.second]->node << " with " << max_distance << std::endl;
 
 
-        printScore(calc_score(output_nodes, output_edges, k), std::to_string(iterations));
+        //printScore(calc_score(output_nodes, output_edges, k), std::to_string(iterations));
         iterations++;
 
         // Cool down the temperature

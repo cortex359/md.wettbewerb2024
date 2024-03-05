@@ -36,8 +36,8 @@ unsigned long optimize_file(const std::string &input_file, const std::string &ou
 
     Score start_score = calc_score(output_nodes, output_edges, k);
 
-    //auto iterations = optimize_positions(output_nodes, output_edges, k, runtime, temperature, cooling_rate, max_perturbation);
-    auto iterations = optimize_positions_v2(output_nodes, output_edges, k, runtime);
+    auto iterations = optimize_positions(output_nodes, output_edges, k, runtime, temperature, cooling_rate, max_perturbation);
+    //auto iterations = optimize_positions_v2(output_nodes, output_edges, k, runtime);
 
     Score case_score = left_right_rotation(output_nodes, output_edges, k);
 
@@ -204,7 +204,8 @@ int main(int argc, char *argv[]) {
             Score rescale_score = calc_score(copy_nodes, copy_edges, k);
             printScore(rescale_score, "rescale by " + std::to_string(factor));
 
-            optimize_positions(copy_nodes, copy_edges, k, runtime / rescale_steps, temperature, cooling_rate, max_perturbation);
+            //optimize_positions(copy_nodes, copy_edges, k, runtime / rescale_steps, temperature, cooling_rate, max_perturbation);
+            optimize_positions_v2(copy_nodes, copy_edges, k, runtime / rescale_steps);
             Score case_score = calc_score(copy_nodes, copy_edges, k);
             printScore(case_score, "           -> " + std::to_string(factor));
             if (case_score.total_score > best_score.total_score) {
