@@ -76,6 +76,9 @@ def calc_angle_max(df_in, df_out, edges):
 def calc_overlap_fast(df):
     return max([calc_overlap(df, node_a, node_b) for node_a, node_b in itertools.combinations(df.index, 2)])
 
+def overlapping_nodes(df):
+    overlaps = [(node_a, node_b, calc_overlap(df, node_a, node_b)) for node_a, node_b in itertools.combinations(df.index, 2)]
+    return sorted([a for a in overlaps if a[2] > 0], key=lambda x: x[2], reverse=True)
 
 def calc_distance_max(df, edges):
     return max([calc_distance(df, node_a, node_b) for node_a, node_b in itertools.combinations(df.index, 2)
