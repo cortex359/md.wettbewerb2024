@@ -16,6 +16,6 @@ for f in *_score_*.txt(on) ; do {
 }; done
 
 cd -q ..
-for k v in ${(Akv)scores} ; do {
+for k v in ${(Akvo)scores} ; do {
     ./bin/graph_optimization -s input_files/${k}.txt result_files/${v}
 }; done | awk 'BEGIN{ summe=0; }; { print; summe += $2 }; END{ print("  -> ", summe); }'
