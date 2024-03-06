@@ -27,15 +27,6 @@ double calc_angle(const Node& node_a, const Node& node_b) {
     return std::atan2(node_a.y - node_b.y, node_a.x - node_b.x);
 }
 
-double find_angle_max(const std::vector<Edge>& output_edges) {
-    double angle_max = 0.0;
-    for (const auto & output_edge : output_edges) {
-        double angle_diff = std::fabs(output_edge.target_angle - output_edge.angle);
-        angle_max = std::max(angle_max, std::min(angle_diff, 2.0 * M_PI - angle_diff));
-    }
-    return angle_max;
-}
-
 double calc_angle_avg(const std::vector<Edge>& output_edges) {
     double angle_avg = 0.0;
     for (const auto & output_edge : output_edges) {
@@ -52,15 +43,6 @@ double calc_distance(const std::shared_ptr<Node>& node_a, const std::shared_ptr<
     double dist = std::hypot(node_a->x - node_b->x, node_a->y - node_b->y);
     double R = node_a->radius + node_b->radius;
     return dist < R ? 0.0 : (dist - R) / R;
-}
-
-
-double calc_distance_max(const std::vector<Edge>& edges, const std::vector<std::shared_ptr<Node>>& nodes) {
-    double distance_max = 0.0;
-    for (const auto& edge : edges) {
-        distance_max = std::max(distance_max, calc_distance(nodes[edge.node_0], nodes[edge.node_1]));
-    }
-    return distance_max;
 }
 
 double calc_distance_avg(const std::vector<Edge>& edges, const std::vector<std::shared_ptr<Node>>& nodes) {

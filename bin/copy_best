@@ -1,0 +1,54 @@
+#!/usr/bin/env zsh
+
+tau_dir='../tau/result_files'
+
+setopt numeric_glob_sort
+
+if [[ ${${(s./.)PWD}[-1]} != "md.wettbewerb2024" ]]; then {
+    print -Pu2 "%F{red}calc_overview must be run from md.wettbewerb2024 dir.%f"
+    return 1
+}; fi
+if [[ ! -d ${tau_dir} ]]; then {
+    print -Pu2 "%F{red}could not find %B${tau_dir}%b.%f"
+    return 1
+}; fi
+
+typeset -A scores=()
+
+cd -q result_files
+for f in *_score_*.txt(on) ; do {
+    test_case=${${(s._score_.)f}[1]}
+    scores+=( [${test_case}]=${f} )
+}; done
+
+cd -q ..
+for k v in ${(Akvo)scores} ; do {
+    {
+        ./bin/graph_optimization -s input_files/${k}.txt ${tau_dir}/${k}.txt.out
+        ./bin/graph_optimization -s input_files/${k}.txt result_files/${v}
+    } | awk 'BEGIN{ a=0; b=0; }; { print; if (a==0) { a = $2; } else { b = $2; }; }; END{ print("Improvement:", b-a); }'
+}; done | awk 'BEGIN{ summe=0; }; { print; if ($1 == "Improvement:") { summe += $2; }; }; END{ print("Total Improvement:", summe); }'
+
+
+function check_improvement() {
+    k=$1; v=$2
+    delta=$({
+        ./bin/graph_optimization -s input_files/${k}.txt ${tau_dir}/${k}.txt.out
+        ./bin/graph_optimization -s input_files/${k}.txt result_files/${v}
+    } | awk 'BEGIN{ a=0; b=0; }; { if (a==0) { a = $2; } else { b = $2; }; }; END{ print(b-a); }' )
+    if (( $delta >= 0.0 )); then
+        return 0
+    else
+        return 1
+    fi
+}
+
+for k v in ${(Akvo)scores} ; do {
+    if check_improvement $k $v; then
+        cp "result_files/${v}" "${tau_dir}/${k}.txt.out"
+        print -Pu2 "%F{green}Copied improved results for case %B$k%b.%f"
+    else
+        print -Pu2 "%F{blue}No improvement found for %B$v%b%f"
+    fi
+}; done
+
