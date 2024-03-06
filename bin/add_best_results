@@ -1,0 +1,18 @@
+#!/usr/bin/zsh
+
+typeset -A scores=()
+cd -q result_files
+
+for f in *_score_*.txt(on) ; do {
+    test_case=${${(s._score_.)f}[1]}
+    scores+=( [${test_case}]=${f} )
+}; done
+
+cd -q ..
+for k v in ${(Akv)scores} ; do {
+    git add result_files/${v}
+}; done
+
+typeset -a other_files=()
+
+other_files=( $(git status -s | sed -Ene '/^\?\? result_files/{ s/^\?\?\s+//1; p; }') )
