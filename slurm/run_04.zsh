@@ -2,20 +2,20 @@
 
 ### Start of Slurm SBATCH definitions
 # Ask for eight tasks (same as 8 cores for this example)
-#SBATCH --ntasks=8
+#SBATCH --ntasks=12
 
 #SBATCH --array=1-12
 
 ### Ask for one node, use several nodes in case you need additional resources
-#SBATCH --nodes=2
+#SBATCH --nodes=12
 
 # Ask for the maximum memory per core (most CLAIX-2023 nodes: 2.7GB per cpu)
-#SBATCH --mem-per-cpu=20M
+#SBATCH --mem-per-cpu=30M
 
-#SBATCH --time=00:02:00
+#SBATCH --time=00:20:10
 
 # Name the job
-#SBATCH --job-name=run_01
+#SBATCH --job-name=run_04
 
 # Declare a file where the STDOUT/STDERR outputs will be written
 #SBATCH --output=output.%A_%a.txt
@@ -25,8 +25,8 @@
 ### your program goes here
 # `srun` runs `ntasks` instances of your programm `hostname`
 
-runtime=100
-max_perturbation=0.01
+runtime=1200
+max_perturbation=0.0005
 
 setopt numeric_glob_sort
 

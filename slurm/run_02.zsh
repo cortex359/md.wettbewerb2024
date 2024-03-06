@@ -7,15 +7,15 @@
 #SBATCH --array=1-12
 
 ### Ask for one node, use several nodes in case you need additional resources
-#SBATCH --nodes=2
+#SBATCH --nodes=4
 
 # Ask for the maximum memory per core (most CLAIX-2023 nodes: 2.7GB per cpu)
 #SBATCH --mem-per-cpu=20M
 
-#SBATCH --time=00:02:00
+#SBATCH --time=00:10:00
 
 # Name the job
-#SBATCH --job-name=run_01
+#SBATCH --job-name=run_02
 
 # Declare a file where the STDOUT/STDERR outputs will be written
 #SBATCH --output=output.%A_%a.txt
@@ -25,8 +25,8 @@
 ### your program goes here
 # `srun` runs `ntasks` instances of your programm `hostname`
 
-runtime=100
-max_perturbation=0.01
+runtime=530
+max_perturbation=0.001
 
 setopt numeric_glob_sort
 
