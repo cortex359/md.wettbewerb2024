@@ -7,8 +7,15 @@ if [[ ${${(s./.)PWD}[-1]} != "md.wettbewerb2024" ]]; then {
 
 path+=( "${PWD}/bin" )
 
+if [[ ${HOSTNAME[-22,-1]} == hpc.itc.rwth-aachen.de ]]; then {
+    python="python3.11"
+
+}; else {
+    python="python"
+}; fi
+
 if [[ ! -d venv ]]; then {
-    python -m venv venv
+    ${python} -m venv venv
     source venv/bin/activate
     pip install -r requirements.txt
 }; fi
