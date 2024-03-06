@@ -1,0 +1,12 @@
+Score 23951.130  (Overlap:   8.7198, Distance:  16.2550, Angle:  11.7206, n: 133, k: 554) result_files/Area_Afro-Eurasia_score_23951.130162.txt
+Score 21466.200  (Overlap:   0.3066, Distance:   5.8845, Angle:   5.9632, n:  23, k:  74) result_files/Area_Americas_score_21466.199692.txt
+Score 22452.105  (Overlap:   0.3129, Distance:   7.2962, Angle:  10.1900, n:  43, k: 156) result_files/Area_Asia_score_22452.104967.txt
+Score 19219.166  (Overlap:   0.1764, Distance:   7.1274, Angle:   7.2064, n:  24, k:  94) result_files/Area_Europe_score_19219.165814.txt
+Score  6555.232  (Overlap:  13.3013, Distance:  38.2460, Angle:  13.8676, n: 127, k: 538) result_files/CO2_Production_Afro-Eurasia_score_6555.231506.txt
+Score  4215.985  (Overlap:   0.5868, Distance:   5.3431, Angle:   8.8796, n:  10, k:  17) result_files/Deutschlands_Nachbarn_score_4215.985161.txt
+Score  7977.234  (Overlap:  12.1541, Distance:  32.8892, Angle:  16.0489, n: 126, k: 534) result_files/GNI_per_capita_Afro-Eurasia_score_7977.233754.txt
+Score 10859.392  (Overlap:   0.6864, Distance:   6.7638, Angle:  10.7536, n:  27, k:  72) result_files/Instant_Noodle_Consumption_Eurasia_score_10859.392.txt
+Score 10170.178  (Overlap:   8.0012, Distance:  30.4388, Angle:  16.6268, n: 133, k: 554) result_files/Population_Afro-Eurasia_score_10170.177866.txt
+Score 22522.256  (Overlap:   0.2797, Distance:   5.4764, Angle:   5.9991, n:  23, k:  74) result_files/Population_Americas_score_22522.256034.txt
+Score  2973.100  (Overlap:  36.2580, Distance:  41.4838, Angle:  15.8511, n: 133, k: 554) result_files/Population_Density_Afro-Eurasia_score_2973.099979.txt
+Score  6098.426  (Overlap:   2.9841, Distance:  12.0725, Angle:  11.6000, n:  23, k:  74) result_files/Population_Density_Americas_score_6098.425903.txt

@@ -21,9 +21,12 @@ std::vector<Edge> get_output_edges(const std::vector<Edge>& input_edges, const s
 
 void rotate_nodes_by_angle_diff(std::vector<std::shared_ptr<Node>>& output_nodes, std::vector<Edge>& output_edges, float factor);
 void rotate_file(const std::string &input_file, const std::string &output_file, bool dry_run = false);
-Score left_right_rotation(std::vector<std::shared_ptr<Node>> &output_nodes, std::vector<Edge> &output_edges, unsigned int k);
+
+[[maybe_unused]] Score left_right_rotation(std::vector<std::shared_ptr<Node>> &output_nodes, std::vector<Edge> &output_edges, unsigned int k);
 
 std::tuple<std::vector<std::shared_ptr<Node>>, std::vector<Edge>> copy_nodes_edges(const std::vector<std::shared_ptr<Node>>& nodes, const std::vector<Edge>& edges);
 void copy_input_values(const std::vector<std::shared_ptr<Node>>& input_nodes, std::vector<std::shared_ptr<Node>>& output_nodes);
+
+Score optimize_rotation(std::vector<std::shared_ptr<Node>>& output_nodes, std::vector<Edge>& output_edges, unsigned int k);
 
 #endif //UTILS_H

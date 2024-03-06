@@ -251,6 +251,8 @@ unsigned long int optimize_positions(
 
     const auto start_time{std::chrono::steady_clock::now()};
     double current_score = calc_score(output_nodes, output_edges, k).total_score;
+    double max_score = current_score;
+    auto max_result = copy_nodes_edges(output_nodes, output_edges);
 
     unsigned long int iterations = 0;
     while (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - start_time).count() < runtime) {
@@ -278,6 +280,11 @@ unsigned long int optimize_positions(
                 node->x = original_x;
                 node->y = original_y;
             } else {
+                // Save the best results so they don't get lost if the score gets worse
+                if (new_score > max_score) {
+                    max_score = new_score;
+                    max_result = copy_nodes_edges(output_nodes, updated_edges);
+                }
                 current_score = new_score; // Update current score
                 output_edges = updated_edges; // Update the edges
             }
@@ -287,6 +294,13 @@ unsigned long int optimize_positions(
         // Cool down the temperature
         temperature *= cooling_rate;
     }
+
+    if (max_score > current_score) {
+        std::cout << "We endet up at " << current_score << " but our maximum was " << max_score << " so we revert back." << std::endl;
+        output_nodes = std::get<0>(max_result);
+        output_edges = std::get<1>(max_result);
+    }
+
     return iterations;
 }
 

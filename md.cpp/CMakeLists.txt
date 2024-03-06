@@ -6,4 +6,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 include_directories(include)
 
-add_executable(graph_optimization src/main.cpp src/score.cpp src/utils.cpp src/perturbation.cpp)
+add_executable(graph_optimization src/main.cpp src/score.cpp src/utils.cpp src/perturbation.cpp
+        src/rotation.cpp
+        include/rotation.h)

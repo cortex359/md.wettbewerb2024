@@ -1,6 +1,7 @@
 #include "score.h"
 #include "perturbation.h"
 #include "utils.h"
+#include "rotation.h"
 #include <iostream>
 
 #define verbose false
@@ -39,9 +40,9 @@ unsigned long optimize_file(const std::string &input_file, const std::string &ou
     auto iterations = optimize_positions(output_nodes, output_edges, k, runtime, temperature, cooling_rate, max_perturbation);
     //auto iterations = optimize_positions_v2(output_nodes, output_edges, k, runtime);
 
-    Score case_score = left_right_rotation(output_nodes, output_edges, k);
+    Score case_score = calc_score(output_nodes, output_edges, k);
 
-    if (start_score.total_score < std::floor(case_score.total_score)) {
+    if (std::ceil(start_score.total_score) < std::floor(case_score.total_score)) {
         std::cout << "Score improved by " << case_score.total_score - start_score.total_score << std::endl;
         save_nodes(output_nodes, output_file, case_score.total_score, dry_run);
     } else {
@@ -227,11 +228,11 @@ int main(int argc, char *argv[]) {
 
     auto time_global_start = std::chrono::high_resolution_clock::now();
 
-    auto iterations = optimize_file(input_file, output_files.back(), runtime, max_perturbation, temperature, cooling_rate);
+    auto iterations = optimize_file(input_file, output_files.back(), runtime, max_perturbation, temperature, cooling_rate, dry_run);
 
     auto time_global_stop = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double, std::milli> total_elapsed = time_global_stop - time_global_start;
-    std::chrono::duration<double, std::nano> total_elapsed_ns = time_global_stop - time_global_start;
+    std::chrono::duration<double, std::micro> total_elapsed_mms = time_global_stop - time_global_start;
 
     if (total_elapsed.count() > 60000) {
         std::cout << "Total Time: " << total_elapsed.count() / 60000 << " min " << static_cast<int>(std::fmod(
@@ -241,9 +242,11 @@ int main(int argc, char *argv[]) {
     } else {
         std::cout << "Total Time: " << total_elapsed.count() << " ms" << std::endl;
     }
-    std::cout << "Iterations: " << iterations << std::endl;
-    std::cout << "Time per 1000 iterations: " << (total_elapsed_ns.count() / static_cast<double>(iterations) / 1000)
-              << " µs/iterations" << std::endl;
+
+    printf("%lu iterations, %.2f iterations per second, avg. time per iteration %.4f µs\n",
+           iterations,
+           (static_cast<double>(iterations) / total_elapsed.count() * 1000),
+           (total_elapsed_mms.count() / static_cast<double>(iterations)));
 
     return 0;
 }

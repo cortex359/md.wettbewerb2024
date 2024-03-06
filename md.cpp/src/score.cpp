@@ -1,6 +1,17 @@
 #include <stdexcept>
 # include "score.h"
 
+/**
+ * @brief Calculates the relative overlap between two nodes.
+ *
+ * The releative overlap is calculated as (R - dist) / R = 1 - (dist / R), where dist is the distance between the two
+ * nodes and R is the sum of their radii.
+ * If the distance is greater than R, the overlap is 0.
+ *
+ * @param node_a First node.
+ * @param node_b Second node.
+ * @return Overlap between the two nodes.
+ */
 double calc_overlap(const Node& node_a, const Node& node_b) {
     if (node_a.node == node_b.node) {
         return 0.0;
@@ -12,6 +23,7 @@ double calc_overlap(const Node& node_a, const Node& node_b) {
 
 double calc_overlap_max(const std::vector<std::shared_ptr<Node>>& nodes) {
     double overlap_max = 0.0;
+    // Ein Overlap kann zwischen allen Nodes entstehen, unabhängig davon, ob sie durch eine Edge verbunden sind.
     for (auto it_a = nodes.begin(); it_a != nodes.end(); ++it_a) {
         for (auto it_b = std::next(it_a); it_b != nodes.end(); ++it_b) {
             overlap_max = std::max(overlap_max, calc_overlap(**it_a, **it_b));
@@ -27,13 +39,13 @@ double calc_angle(const Node& node_a, const Node& node_b) {
     return std::atan2(node_a.y - node_b.y, node_a.x - node_b.x);
 }
 
-double calc_angle_avg(const std::vector<Edge>& output_edges) {
+double calc_angle_avg(const std::vector<Edge>& edges) {
     double angle_avg = 0.0;
-    for (const auto & output_edge : output_edges) {
-        double angle_diff = std::fabs(output_edge.target_angle - output_edge.angle);
+    for (const auto& edge : edges) {
+        double angle_diff = std::fabs(edge.target_angle - edge.angle);
         angle_avg += std::min(angle_diff, 2.0 * M_PI - angle_diff);
     }
-    return angle_avg / static_cast<double>(output_edges.size());
+    return angle_avg / static_cast<double>(edges.size());
 }
 
 double calc_distance(const std::shared_ptr<Node>& node_a, const std::shared_ptr<Node>& node_b) {
@@ -50,7 +62,7 @@ double calc_distance_avg(const std::vector<Edge>& edges, const std::vector<std::
     for (const auto& edge : edges) {
         distances += calc_distance(nodes[edge.node_0], nodes[edge.node_1]);
     }
-    return distances / edges.size();
+    return distances / static_cast<double>(edges.size());
 }
 
 Score calc_score(const std::vector<std::shared_ptr<Node>>& output_nodes,

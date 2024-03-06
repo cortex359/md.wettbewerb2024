@@ -1,6 +1,31 @@
 #!/usr/bin/env zsh
 
-function run_test() {
+# Test Dateien mit der neuen Bewertungsfunktion nach der Midterm Änderung
+function run_test_v2() {
+    run_solver=$1
+    print -Pu2 "%F{blue}Testing with ${run_solver}:%f"
+    {
+        ${run_solver} -s input_files/Area_Afro-Eurasia.txt result_files/Area_Afro-Eurasia_score_23951.130162.txt
+        ${run_solver} -s input_files/Area_Americas.txt result_files/Area_Americas_score_21466.199692.txt
+        ${run_solver} -s input_files/Area_Asia.txt result_files/Area_Asia_score_22452.104967.txt
+        ${run_solver} -s input_files/Area_Europe.txt result_files/Area_Europe_score_19219.165814.txt
+        ${run_solver} -s input_files/CO2_Production_Afro-Eurasia.txt result_files/CO2_Production_Afro-Eurasia_score_6555.231506.txt
+        ${run_solver} -s input_files/Deutschlands_Nachbarn.txt result_files/Deutschlands_Nachbarn_score_4215.985161.txt
+        ${run_solver} -s input_files/GNI_per_capita_Afro-Eurasia.txt result_files/GNI_per_capita_Afro-Eurasia_score_7977.233754.txt
+        ${run_solver} -s input_files/Instant_Noodle_Consumption_Eurasia.txt result_files/Instant_Noodle_Consumption_Eurasia_score_10859.392.txt
+        ${run_solver} -s input_files/Population_Afro-Eurasia.txt result_files/Population_Afro-Eurasia_score_10170.177866.txt
+        ${run_solver} -s input_files/Population_Americas.txt result_files/Population_Americas_score_22522.256034.txt
+        ${run_solver} -s input_files/Population_Density_Afro-Eurasia.txt result_files/Population_Density_Afro-Eurasia_score_2973.099979.txt
+        ${run_solver} -s input_files/Population_Density_Americas.txt result_files/Population_Density_Americas_score_6098.425903.txt
+    } >| /tmp/test_solver.output
+
+    diff -s "./tests/test_solver.2.0.1.output" /tmp/test_solver.output
+    return $?
+}
+
+
+# Test Dateien mit der alten Bewertungsfunktion vor der Midterm Änderung
+function run_test_v1() {
     run_solver=$1
     print -Pu2 "%F{blue}Testing with ${run_solver}:%f"
     {
@@ -22,9 +47,10 @@ function run_test() {
     return $?
 }
 
+
 if (( ARGC >= 1 )); then {
     for solver in ${argv}; do {
-        run_test "${solver}"
+        run_test_v2 "${solver}"
     }; done
 }; else {
     print -Pu2 "%F{red}No solver given.%f"
