@@ -42,12 +42,11 @@ double calc_angle(const Node& node_a, const Node& node_b);
 double calc_overlap(const Node& node_a, const Node& node_b);
 
 double calc_distance(const std::shared_ptr<Node>& node_a, const std::shared_ptr<Node>& node_b);
-double calc_distance_max(const std::vector<Edge>& edges, const std::vector<std::shared_ptr<Node>>& nodes);
 
 Score calc_score(const std::vector<std::shared_ptr<Node>>& output_nodes,
                  const std::vector<Edge>& output_edges,
                  unsigned int k);
-double find_angle_max(const std::vector<Edge>& output_edges);
+
 double calc_overlap_max(const std::vector<std::shared_ptr<Node>>& nodes);
 
 void printScore(const Score& score, const std::string& file);

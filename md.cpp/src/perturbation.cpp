@@ -46,7 +46,7 @@ std::pair<std::shared_ptr<Node>, std::shared_ptr<Node>> decide_further_away(cons
 }
 
 // move node a further away from node b by a factor
-void move_node_further_away(std::shared_ptr<Node>& node_a, const std::shared_ptr<Node>& node_b, double factor) {
+void move_node_further_away(const std::shared_ptr<Node>& node_a, const std::shared_ptr<Node>& node_b, double factor) {
     if (node_a->node == node_b->node) return;
     double distance = std::hypot(node_a->x - node_b->x, node_a->y - node_b->y);
     double c = node_a->radius + node_b->radius - distance;
@@ -280,7 +280,7 @@ unsigned long int optimize_positions(
                 node->x = original_x;
                 node->y = original_y;
             } else {
-                // Save the best results so they don't get lost if the score gets worse
+                // Save the best results, so they don't get lost if the score gets worse
                 if (new_score > max_score) {
                     max_score = new_score;
                     max_result = copy_nodes_edges(output_nodes, updated_edges);
