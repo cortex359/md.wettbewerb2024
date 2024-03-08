@@ -26,7 +26,7 @@ def read_to_df(file_path: str) -> pd.DataFrame:
         nodes_df = nodes_df.astype({'x': float, 'y': float, 'radius': float, 'node': str, 'idx': int})
     except ValueError as error:
         exit(f'❌ Error parsing output file: {error}.')
-    nodes_df.set_index('node', inplace=True)
+    nodes_df.set_index('node', inplace=True, drop=False, verify_integrity=True)
 
     return nodes_df
 

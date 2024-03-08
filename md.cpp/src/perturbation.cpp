@@ -183,48 +183,72 @@ unsigned long int optimize_positions_v2(
 }
 
 // Funktion, um die relevanten Knoten zu identifizieren
-std::set<unsigned int> find_relevant_nodes(
+std::vector<unsigned int> find_relevant_nodes(
         const std::vector<Edge>& output_edges,
         const std::vector<std::shared_ptr<Node>>& output_nodes) {
 
     // Identifiziere Knoten mit maximaler Überlappung
     double max_overlap = 0.0;
     std::pair<unsigned int, unsigned int> max_overlap_nodes;
+
+    // Overlap aller Nodes
+    std::vector<std::tuple<int, int, double>> overlapping_nodes;
     for (size_t i = 0; i < output_nodes.size(); ++i) {
         for (size_t j = i + 1; j < output_nodes.size(); ++j) {
             double overlap = calc_overlap(*output_nodes[i], *output_nodes[j]);
+            if (overlap > 0) {
+                overlapping_nodes.emplace_back(i, j, overlap);
+            }
             if (overlap > max_overlap) {
                 max_overlap = overlap;
-                max_overlap_nodes = std::make_pair(i, j);
+                // max_overlap_nodes = std::make_pair(i, j);
             }
         }
     }
+    std::sort(overlapping_nodes.begin(), overlapping_nodes.end(), [](const std::tuple<int, int, double>& a, const std::tuple<int, int, double>& b) {
+        return std::get<2>(a) > std::get<2>(b);
+    });
+
 
     // Identifiziere Knoten mit maximaler Winkelabweichung oder Abstand
     std::pair<unsigned int, unsigned int> max_angle_node_indices;
     std::pair<unsigned int, unsigned int> max_distance_node_indices;
-
     double max_angle = 0.0;
     double max_distance = 0.0;
+
+    std::vector<std::tuple<int, int, double>> node_distances;
+    std::vector<std::tuple<int, int, double>> node_angels;
 
     for (const auto & output_edge : output_edges) {
         // Winkelberechnung
         double angle_diff = std::fabs(output_edge.target_angle - output_edge.angle);
         angle_diff = std::min(angle_diff, 2.0 * M_PI - angle_diff);
+        node_angels.emplace_back(output_edge.node_0, output_edge.node_1, angle_diff);
         if (angle_diff > max_angle) {
             max_angle = angle_diff;
-            max_angle_node_indices = {output_edge.node_0, output_edge.node_1};
+            //max_angle_node_indices = {output_edge.node_0, output_edge.node_1};
         }
 
         // Abstandsberechnung
         double distance = calc_distance(output_nodes[output_edge.node_0], output_nodes[output_edge.node_1]);
+        if (distance > 0) {
+            node_distances.emplace_back(output_edge.node_0, output_edge.node_1, distance);
+        }
         if (distance > max_distance) {
             max_distance = distance;
-            max_distance_node_indices = {output_edge.node_0, output_edge.node_1};
+            //max_distance_node_indices = {output_edge.node_0, output_edge.node_1};
         }
     }
 
-    // Füge die gefundenen relevanten Knoten in ein Set ein, um Duplikate zu vermeiden
+    std::sort(node_distances.begin(), node_distances.end(), [](const std::tuple<int, int, double>& a, const std::tuple<int, int, double>& b) {
+        return std::get<2>(a) > std::get<2>(b);
+    });
+    std::sort(node_angels.begin(), node_angels.end(), [](const std::tuple<int, int, double>& a, const std::tuple<int, int, double>& b) {
+        return std::get<2>(a) > std::get<2>(b);
+    });
+
+    // Note: Eigentlich sind Duplikate gut, da wir bei Nodes, welche häufiger vorkommen auch häufiger versuchen sollten zu optimieren!
+    /* Füge die gefundenen relevanten Knoten in ein Set ein, um Duplikate zu vermeiden
     std::set<unsigned int> relevant_nodes;
     relevant_nodes.insert(max_overlap_nodes.first);
     relevant_nodes.insert(max_overlap_nodes.second);
@@ -232,6 +256,7 @@ std::set<unsigned int> find_relevant_nodes(
     relevant_nodes.insert(max_angle_node_indices.second);
     relevant_nodes.insert(max_distance_node_indices.first);
     relevant_nodes.insert(max_distance_node_indices.second);
+    */
 
     return relevant_nodes;
 }
@@ -250,14 +275,18 @@ unsigned long int optimize_positions(
     std::uniform_real_distribution dist(-1.0, 1.0);
 
     const auto start_time{std::chrono::steady_clock::now()};
-    double current_score = calc_score(output_nodes, output_edges, k).total_score;
-    double max_score = current_score;
+    Score current_score = calc_score(output_nodes, output_edges, k);
+    Score start_score = current_score;
+    Score max_score = current_score;
     auto max_result = copy_nodes_edges(output_nodes, output_edges);
 
     unsigned long int iterations = 0;
     while (std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - start_time).count() < runtime) {
+        // Perturb only "relevant" nodes
         auto relevant_nodes = find_relevant_nodes(output_edges, output_nodes);
         for (unsigned int idx : relevant_nodes) {
+        // or perturb all of them:
+        //for (int idx=0; idx<output_nodes.size(); ++idx) {
             auto& node = output_nodes[idx];
 
             // Save the current position
@@ -273,15 +302,15 @@ unsigned long int optimize_positions(
             const std::vector<Edge> updated_edges = update_angles(output_edges, output_nodes);
 
             // Calculate the score with the new position
-            double new_score = calc_score(output_nodes, updated_edges, k).total_score;
+            Score new_score = calc_score(output_nodes, updated_edges, k);
 
             // Revert if the new score is worse, considering the temperature for simulated annealing
-            if (new_score < current_score && exp((new_score - current_score) / temperature) < dist(rng)) {
+            if (new_score.total_score < current_score.total_score && exp((new_score.total_score - current_score.total_score) / temperature) < dist(rng)) {
                 node->x = original_x;
                 node->y = original_y;
             } else {
                 // Save the best results, so they don't get lost if the score gets worse
-                if (new_score > max_score) {
+                if (new_score.total_score > max_score.total_score) {
                     max_score = new_score;
                     max_result = copy_nodes_edges(output_nodes, updated_edges);
                 }
@@ -295,8 +324,8 @@ unsigned long int optimize_positions(
         temperature *= cooling_rate;
     }
 
-    if (max_score > current_score) {
-        std::cout << "We endet up at " << current_score << " but our maximum was " << max_score << " so we revert back." << std::endl;
+    if (max_score > current_score && max_score > start_score) {
+        std::cout << "We endet up at " << current_score << " but our maximum was " << max_score << ", so we revert back." << std::endl;
         output_nodes = std::get<0>(max_result);
         output_edges = std::get<1>(max_result);
     }

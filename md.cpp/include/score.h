@@ -8,7 +8,7 @@
 #include <memory>
 
 // Constant for version
-const auto VERSION = "2.0.1";
+const auto VERSION = "2.1.0";
 
 // Node structure for input graph
 struct Node {

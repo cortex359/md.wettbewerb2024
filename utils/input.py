@@ -25,7 +25,7 @@ def read_to_df(file_path: str) -> (pd.DataFrame, pd.DataFrame, int):
         nodes_df = nodes_df.astype({'node': str, 'value': float, 'x': float, 'y': float})
     except ValueError as error:
         exit(f'❌ Error parsing input file: {error}.')
-    nodes_df.set_index('node', inplace=True)
+    nodes_df.set_index('node', inplace=True, drop=False, verify_integrity=True)
 
     # edges_raw → edges_list → edges_df
     edges_list = [tuple(line.split()) for line in edges_raw.split('\n')]

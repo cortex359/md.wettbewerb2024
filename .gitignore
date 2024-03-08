@@ -163,3 +163,4 @@ test_results
 web/data
 !web/data/scores.log
 !web/data/web.log
+.directory

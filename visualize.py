@@ -11,19 +11,26 @@ test_cases = ["Area_Afro-Eurasia", "Area_Americas", "Area_Asia", "Area_Europe",
               "CO2_Production_Afro-Eurasia", "Deutschlands_Nachbarn", "GNI_per_capita_Afro-Eurasia", "Instant_Noodle_Consumption_Eurasia",
               "Population_Afro-Eurasia", "Population_Americas",
               "Population_Density_Afro-Eurasia", "Population_Density_Americas"]
-test_case = test_cases[6]
+test_case = test_cases[3]
+
+output_file = f"../tau/result_files/{test_case}.txt.out"
+#output_file = f"original_result_files/{test_case}.txt.out"
+#output_file = "tests/Area_Europe_handmade.txt"
+output_file = "result_files/Area_Europe_score_22238.190006.txt"
 
 nodes_input, edges_df, k = input.read_to_df(f"input_files/{test_case}.txt")
-nodes_output = score.read_to_df(f"../tau/result_files/{test_case}.txt.out")
+nodes_output = score.read_to_df(output_file)
 
 
 output_edges = score.output_edges(edges_df, nodes_input, nodes_output)
 edges = list(zip(edges_df.node_0.to_list(), edges_df.node_1.to_list()))
 
+n, overlap, distance, angle, total_score = score.calc_score(nodes_input, nodes_output, edges, k)
+
 px = 1/plt.rcParams['figure.dpi']  # pixel in inches
 fig_scale_factor = 1.8 * px
 fig, ax = plt.subplots(1, 1, figsize=(20, 20))
-ax.set_title(f"{test_case}")
+ax.set_title(f"{test_case.replace('_', ' ')} (n:{n} k:{k})\nScore: {total_score:.2f}, max. Overlap: {overlap:.2f}, avg. Distance: {distance:.2f}, avg. Angle: {angle:.2f}")
 
 colors = cm.Spectral(np.linspace(0, 1, len(nodes_output)))
 
@@ -47,15 +54,24 @@ for edge, row in output_edges.iterrows():
     # ax.annotate(f"D:{row.distance:.2f}\nA:{row.angle_diff:.2f}", xy=annotation_xy, fontsize=4)
 
     # Weighted stats
-    w_angle = 0.05 * (row.angle_diff * row.angle_diff)
+    w_angle = row.angle_diff
     if row.distance > 0:
-        w_distance = 0.05 * (row.distance * row.distance)
+        w_distance = row.distance
         ax.annotate(f"D:{w_distance:.2f}\nA:{w_angle:.2f}", xy=annotation_xy, fontsize=4)
     ax.annotate(f"A:{w_angle:.2f}", xy=annotation_xy, fontsize=4)
 
-for node_0, node_1, overlap in score.overlapping_nodes(nodes_output)[0:5]:
-    print(node_0, node_1, overlap * 100, (overlap * overlap * 1000))
+def alt_score(_n, _k, _overlap, _distance, _angle):
+    return 1000. * (_n + _k) / (1 + 0.1 * (_overlap ** 2) + 0.05 * (_distance ** 2) + 0.05 * (_angle ** 2))
 
+print("Most overlaping nodes:")
+for node_0, node_1, overlap in score.overlapping_nodes(nodes_output)[0:10]:
+    print("{:3s} {:3s} {:7.3f} {:7.2f}".format(node_0, node_1, overlap * 100, alt_score(n, k, overlap, distance, angle)))
+
+print("Angles:")
+print(output_edges.angle_diff.describe())
+
+print("Distances")
+print(output_edges.distance.describe())
 
 
 ax.set_aspect('equal')
