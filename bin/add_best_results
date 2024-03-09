@@ -16,3 +16,6 @@ for k v in ${(Akv)scores} ; do {
 typeset -a other_files=()
 
 other_files=( $(git status -s | sed -Ene '/^\?\? result_files/{ s/^\?\?\s+//1; p; }') )
+print -l ${other_files}
+
+sleep 5 && rm -I --preserve-root ${other_files}
