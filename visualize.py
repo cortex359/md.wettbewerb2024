@@ -1,4 +1,5 @@
 import math
+import sys
 
 import pandas as pd
 import numpy as np
@@ -11,14 +12,14 @@ test_cases = ["Area_Afro-Eurasia", "Area_Americas", "Area_Asia", "Area_Europe",
               "CO2_Production_Afro-Eurasia", "Deutschlands_Nachbarn", "GNI_per_capita_Afro-Eurasia", "Instant_Noodle_Consumption_Eurasia",
               "Population_Afro-Eurasia", "Population_Americas",
               "Population_Density_Afro-Eurasia", "Population_Density_Americas"]
-test_case = test_cases[3]
+test_case_id = sys.argv[1]
+test_case = test_cases[int(test_case_id)]
+print(test_case_id, test_case)
 
-output_file = f"../tau/result_files/{test_case}.txt.out"
-#output_file = f"original_result_files/{test_case}.txt.out"
-#output_file = "tests/Area_Europe_handmade.txt"
-output_file = "result_files/Area_Europe_score_22238.190006.txt"
+input_file, output_file = input.get_highest_score_file(test_case)
+print(input_file, output_file)
 
-nodes_input, edges_df, k = input.read_to_df(f"input_files/{test_case}.txt")
+nodes_input, edges_df, k = input.read_to_df(input_file)
 nodes_output = score.read_to_df(output_file)
 
 
@@ -43,11 +44,6 @@ for edge, row in output_edges.iterrows():
     node_a = nodes_output.loc[row.node_0]
     node_b = nodes_output.loc[row.node_1]
     ax.plot([node_a.x, node_b.x], [node_a.y, node_b.y], color='grey', lw=0.5, alpha=0.3)
-    #relation = node_a.radius/(node_a.radius + node_b.radius)
-    #delta_x = node_a.x - node_b.x
-    #delta_y = node_a.y - node_b.y
-    #distance = np.hypot(delta_x, delta_y)
-    #annotation_xy = ((node_a.x - node_b.x) * relation + node_a.x, (node_a.y - node_b.y) * relation + node_a.y)
     annotation_xy = ((node_a.x + node_b.x) / 2, (node_a.y + node_b.y) / 2)
 
     # Plain stats

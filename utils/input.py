@@ -1,3 +1,5 @@
+import os
+
 import pandas as pd
 
 
@@ -69,3 +71,23 @@ def read_to_lists(file_path: str) -> (dict[str, tuple[float, float, float]], lis
     edges_list = [tuple(line.split()) for line in edges_raw.split('\n')]
     edges_list = remove_edge_duplicates(edges_list)
     return nodes_dict, edges_list
+
+def get_highest_score_file(file: str, result_path="result_files/", input_path="input_files/") -> (str, str):
+    # get files in direcotry, starting with string
+    input_file = [f for f in os.listdir(input_path) if f.startswith(file)]
+    if len(input_file) == 0:
+        raise FileNotFoundError(f"❌ Error: No input file found at {input_path}{file}.")
+    if len(input_file) > 1:
+        raise FileExistsError(f"❌ Error: Multiple input files found at {input_path}{file}.")
+
+    output_files = [f for f in os.listdir(result_path) if f.startswith(file)]
+    if len(output_files) == 0:
+        raise FileNotFoundError(f"❌ Error: No output file found at {result_path}{file}.")
+    file_score_pairs = []
+    for output_file in output_files:
+        if output_file.find("_score_") == -1:
+            continue
+        file_score_pairs.append((float(output_file.split("_score_")[1].split(".txt")[0]), output_file))
+
+    sorted(file_score_pairs, key=lambda x: x[0], reverse=True)
+    return f"{input_path}{input_file[0]}", f"{result_path}{file_score_pairs[0][1]}"

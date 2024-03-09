@@ -13,7 +13,26 @@ if (( ARGC != 2 )); then {
     return 2
 }; fi
 
-print -Pu2 "%F{blue}Running all for $1 seconds and with max_perturbation=$2%f"
+if [[ $HOST == "compute" ]]; then
+    logpath="tsunami-logs"
+elif [[ $HOST == "LDELL-CT" ]]; then
+    logpath="ldell-logs"
+elif [[ ${HOST[-18,-1]} == "itc.rwth-aachen.de" ]]; then
+    logpath="slurm-logs"
+elif [[ $HOST == "algieba" ]]; then
+    logpath="algieba-logs"
+else
+    logpath="logs"
+fi
+
+if [[ ! -d ${logpath} ]] {
+    print -Pu2 "%F{red}Logpath %B${logpath}%b not found.%f"
+    mkdir -p ${logpath} || return 3
+}
+
+print -Pu2 "%F{green}Saving logs to %B${logpath}%b.%f"
+
+print -Pu2 "%F{blue}Running graph_optimization $(./bin/graph_optimization --version) for $1 seconds and with max_perturbation=$2%f"
 
 typeset -A scores=()
 cd -q result_files
@@ -23,7 +42,10 @@ for f in *_score_*.txt(on) ; do {
 }; done
 
 cd -q ..
-typeset -i runtime=$1
+typeset -i caseID=0
 for k v in ${(Akv)scores} ; do {
-    ./bin/graph_optimization input_files/${k}.txt result_files/${v} $runtime $2 &
+    echo "$(date --rfc-3339=seconds) Running graph_optimization $(./bin/graph_optimization --version) for $1 seconds and with max_perturbation=$2" | tee -a ${logpath}/${caseID}.log
+    ./bin/graph_optimization input_files/${k}.txt result_files/${v} $runtime $2 | tee -a ${logpath}/${caseID}.log &
+    caseID+=1
 }; done
+
