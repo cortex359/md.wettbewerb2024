@@ -32,7 +32,8 @@ if [[ ! -d ${logpath} ]] {
 
 print -Pu2 "%F{green}Saving logs to %B${logpath}%b.%f"
 
-print -Pu2 "%F{blue}Running graph_optimization $(./bin/graph_optimization --version) for $1 seconds and with max_perturbation=$2%f"
+typeset -i runtime=$1
+print -Pu2 "%F{blue}Running graph_optimization $(./bin/graph_optimization --version) for ${runtime} seconds and with max_perturbation=$2%f"
 
 typeset -A scores=()
 cd -q result_files
@@ -49,3 +50,4 @@ for k v in ${(Akv)scores} ; do {
     caseID+=1
 }; done
 
+sleep $runtime
