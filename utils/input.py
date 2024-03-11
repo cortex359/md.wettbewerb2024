@@ -1,6 +1,7 @@
 import os
 
 import pandas as pd
+from utils import score
 
 
 def read_to_df(file_path: str) -> (pd.DataFrame, pd.DataFrame, int):
@@ -35,6 +36,7 @@ def read_to_df(file_path: str) -> (pd.DataFrame, pd.DataFrame, int):
     k: int = len(edges_list)
     edges_list = remove_edge_duplicates(edges_list)
     edges_df = pd.DataFrame(edges_list, columns=['node_0', 'node_1'])
+    edges_df['target_angle'] = edges_df.apply(lambda x: score.calc_angle_no_pi(nodes_df, x.node_0, x.node_1), axis=1)
 
     return nodes_df, edges_df, k
 
@@ -89,5 +91,5 @@ def get_highest_score_file(file: str, result_path="result_files/", input_path="i
             continue
         file_score_pairs.append((float(output_file.split("_score_")[1].split(".txt")[0]), output_file))
 
-    sorted(file_score_pairs, key=lambda x: x[0], reverse=True)
+    file_score_pairs = sorted(file_score_pairs, key=lambda x: x[0], reverse=True)
     return f"{input_path}{input_file[0]}", f"{result_path}{file_score_pairs[0][1]}"

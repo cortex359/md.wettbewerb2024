@@ -66,6 +66,16 @@ def calc_angle(df, node_a, node_b):
     delta_y = node_a.y - node_b.y
     return math.atan2(delta_y, delta_x) / math.pi
 
+def calc_angle_no_pi(df, node_a, node_b):
+    # ignore identical nodes
+    if node_a == node_b:
+        return 0
+    # calculate angle of two nodes
+    node_a = df.loc[node_a]
+    node_b = df.loc[node_b]
+    delta_x = node_a.x - node_b.x
+    delta_y = node_a.y - node_b.y
+    return math.atan2(delta_y, delta_x)
 
 def calc_angle_max(df_in, df_out, edges):
     alpha = [(calc_angle(df_in, node_a, node_b), calc_angle(df_out, node_a, node_b)) for node_a, node_b in
