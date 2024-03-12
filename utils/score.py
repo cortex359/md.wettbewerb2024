@@ -133,6 +133,22 @@ def output_edges(input_edges: pd.DataFrame, input_nodes: pd.DataFrame, output_no
     edges['angle_diff'] = edges.apply(lambda x: min(abs(x.target_angle - x.angle), 2 - abs(x.target_angle - x.angle)) * 100, axis=1)
     return edges
 
+def output_edges_fast(edges_df: pd.DataFrame, input_nodes: pd.DataFrame, output_nodes: pd.DataFrame):
+    edges_df['R'] = edges_df.apply(lambda x: output_nodes.at[x.node_0, 'radius'] + output_nodes.at[x.node_1, 'radius'], axis=1)
+    edges_df['target_angle'] = edges_df.apply(lambda x: calc_angle(input_nodes, x.node_0, x.node_1), axis=1)
+
+    edges_df['angle'] = edges_df.apply(lambda x: calc_angle(output_nodes, x.node_0, x.node_1), axis=1)
+    edges_df['length'] = edges_df.apply(lambda x:
+                                        np.hypot(output_nodes.at[x.node_0, 'x'] - output_nodes.at[x.node_1, 'x'],
+                                                 output_nodes.at[x.node_0, 'y'] - output_nodes.at[x.node_1, 'y']),
+                                        axis=1)
+
+    edges_df['angle_diff'] = edges_df.apply(lambda x:
+                                            min(abs(x.target_angle - x.angle), 2 - abs(x.target_angle - x.angle)) * 100,
+                                            axis=1)
+    edges_df['distance'] = (edges_df['length'] / edges_df['R']) * 100 - 100
+    edges_df.loc[edges_df['distance'] < 0, 'distance'] = 0
+
 def score_files(input_file, output_file):
     nodes_input, edges, k = input.read_to_df(input_file)
     edges = list(zip(edges.node_0.to_list(), edges.node_1.to_list()))
