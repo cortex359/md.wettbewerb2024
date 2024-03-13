@@ -5,11 +5,8 @@ if [[ ${${(s./.)PWD}[-1]} != "md.wettbewerb2024" ]]; then {
     return 1
 }; fi
 
-path+=( "${PWD}/bin" )
-
 if [[ ${HOSTNAME[-22,-1]} == hpc.itc.rwth-aachen.de ]]; then {
     python="python3.11"
-
 }; else {
     python="python"
 }; fi
@@ -21,5 +18,7 @@ if [[ ! -d venv ]]; then {
 }; fi
 
 source venv/bin/activate
+
+path+=( "${PWD}/bin" )
 
 setopt numeric_glob_sort

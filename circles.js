@@ -206,6 +206,14 @@ function drawCircles(data) {
         );
         svgCanvas.appendChild(circleGroup);
         circleElements[name] = circleGroup;
+
+        // Add event listeners for mouse enter and leave
+        circleGroup.addEventListener('mouseenter', function(event) {
+            highlightEdges(circleGroup.querySelector('circle'));
+        });
+        circleGroup.addEventListener('mouseleave', function(event) {
+            unhighlightEdges(circleGroup.querySelector('circle'));
+        });
     });
     return circleElements;
 }
@@ -331,6 +339,41 @@ function updateEdgePositions(circle, circleElements) {
         }
     });
 }
+
+
+
+
+
+function highlightEdges(circle) {
+    // Extract the name of the circle being hovered
+    const name = circle.getAttribute('data-name');
+
+    // Find all edges connected to the circle
+    const connectedEdges = svgCanvas.querySelectorAll(`line[data-node0="${name}"], line[data-node1="${name}"]`);
+
+    // Highlight each connected edge
+    connectedEdges.forEach(edge => {
+        edge.classList.add('highlight');
+    });
+}
+
+function unhighlightEdges(circle) {
+    // Extract the name of the circle being unhovered
+    const name = circle.getAttribute('data-name');
+
+    // Find all edges connected to the circle
+    const connectedEdges = svgCanvas.querySelectorAll(`line[data-node0="${name}"], line[data-node1="${name}"]`);
+
+    // Unhighlight each connected edge
+    connectedEdges.forEach(edge => {
+        edge.classList.remove('highlight');
+    });
+}
+
+
+
+
+
 
 function fitToView() {
     const bounds = Array.from(svgCanvas.querySelectorAll('circle')).reduce((bounds, circle) => {
