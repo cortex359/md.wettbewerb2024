@@ -19,4 +19,16 @@ cd -q ..
 for k v in ${(Akvo)scores} ; do {
     ./bin/graph_optimization -s input_files/${k}.txt result_files/${v}
     #echo '${run_solver}' -s input_files/${k}.txt result_files/${v}
-}; done | awk 'BEGIN{ summe=0; }; { print; summe += $2 }; END{ printf("  → %'"'"'10.2f\n", summe); }'
+}; done | awk '
+BEGIN {
+    summe=0
+    bonus=28973
+}
+{
+    print; summe += $2
+}
+END {
+    printf("  → %'"'"'10.2f\n", summe)
+    printf("  + %'"'"'10.2f\n", bonus)
+    printf(" →→ %'"'"'10.2f\n", summe + bonus)
+}'
