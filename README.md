@@ -2,16 +2,16 @@
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
-## :1st_place_medal: Team τ
+![scores.gif](media%2Fscores.gif)
+
+## :3rd_place_medal: Team τ
   - Christian Rene Thelen [christian.thelen@rwth-aachen.de](mailto:christian.thelen@rwth-aachen.de) :octocat: [@cortex359](https://github.com/cortex359)
 
 
+![](https://img.shields.io/badge/C%2B%2B-00599C?style=for-the-badge&logo=c%2B%2B&logoColor=white)
 ![](https://img.shields.io/badge/Python-FFD43B?style=for-the-badge&logo=python&logoColor=blue)
 ![](https://img.shields.io/badge/Numpy-777BB4?style=for-the-badge&logo=numpy&logoColor=white)
 ![](https://img.shields.io/badge/SciPy-654FF0?style=for-the-badge&logo=SciPy&logoColor=white)
-
-
-![](https://img.shields.io/badge/C%2B%2B-00599C?style=for-the-badge&logo=c%2B%2B&logoColor=white)
 
 ---
 
@@ -21,19 +21,6 @@
 und [Vergleichsübersicht](https://wettbewerb.mathedual.de/index_main.html),
 sowie allgemeine [Informationen](https://www.mathe-dual.de/index.php/wettbewerb-link) über den Wettbewerb auf [mathe-dual.de](https://www.mathe-dual.de).
 
-
-# This Repository
-A list with relevant research publications can be found here: [RESEARCH.md](RESEARCH.md)
-
-An overview over our best results: [results/current_best/README.md](results/current_best/README.md)
-
-The latest comparisons of our results with other teams:
-- [Final Overview](web/relative_score_tables/overview-final.md)
-- [2023-03-06 22:48](web/relative_score_tables/overview-2023-03-06_22-48.md)
-- [2023-03-06 16:03](web/relative_score_tables/overview-2023-03-06_16-03.md)
-- [2023-03-06 10:43](web/relative_score_tables/overview-2023-03-06_10-43.md)
-- [2023-03-05 22:50](web/relative_score_tables/overview-2023-03-05_22-50.md)
-- [2023-03-05 21:38](web/relative_score_tables/overview-2023-03-05_21-38.md)
 
 
 ## Installation
